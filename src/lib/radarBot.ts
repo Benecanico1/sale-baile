@@ -648,7 +648,7 @@ export async function analyzeFlyerWithGeminiVision(
       return null;
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
 
     const prompt = `Eres un extractor de datos de flyers de eventos de baile. Tu UNICO trabajo es leer lo que ESTA ESCRITO en la imagen y el texto. No interpretes, no asumas, no completes informacion faltante.
 
