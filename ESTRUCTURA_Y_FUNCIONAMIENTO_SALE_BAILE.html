@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sale Baile - Manual Explicativo y Estructura del Sistema</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm 10mm 12mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #0c0a0f;
+      color: #e2e8f0;
+      line-height: 1.45;
+      padding: 10px;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      background: #13111a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 28px 32px;
+    }
+
+    header {
+      border-bottom: 2px solid rgba(255, 45, 85, 0.35);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .badge-app {
+      background: linear-gradient(135deg, #ff2d55, #ff6b4a);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.4px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 12.5px;
+      margin-top: 2px;
+    }
+
+    .header-meta {
+      text-align: right;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    h2 {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 18px 0 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-left: 3.5px solid #ff2d55;
+      padding-left: 8px;
+      break-after: avoid;
+    }
+
+    p {
+      color: #cbd5e1;
+      font-size: 12.5px;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: #181524;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin-bottom: 4px;
+    }
+
+    li {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 5px;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    li::before {
+      content: "•";
+      color: #ff2d55;
+      font-weight: bold;
+      font-size: 14px;
+      position: absolute;
+      left: 3px;
+      top: -2px;
+    }
+
+    .diagram {
+      background: #0d0b14;
+      border: 1px solid rgba(255, 45, 85, 0.25);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 14px 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      text-align: center;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .node {
+      background: #1e1a2f;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 8px 12px;
+      min-width: 120px;
+    }
+
+    .node-title {
+      font-weight: 800;
+      font-size: 11.5px;
+      color: #ffffff;
+    }
+
+    .node-desc {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .arrow {
+      color: #ff2d55;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 11.5px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    th {
+      background: #1f1b30;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    td {
+      color: #cbd5e1;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .tag-admin { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .tag-org { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .tag-user { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+    .footer {
+      margin-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 10px;
+      text-align: center;
+      font-size: 10.5px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <span class="badge-app">Documento Oficial</span>
+        <h1>Sale Baile / Hoy Bailamos</h1>
+        <div class="subtitle">Manual de Estructura y Funcionamiento del Sistema (Explicado para no programadores)</div>
+      </div>
+      <div class="header-meta">
+        <div><strong>Versión:</strong> 4.0 Pro Cloud</div>
+        <div><strong>Estado:</strong> En Producción Activa</div>
+        <div><strong>Web Oficial:</strong> salebaile.web.app</div>
+      </div>
+    </header>
+
+    <h2>1. ¿Qué es la Aplicación y qué Problema Resuelve?</h2>
+    <p>
+      <strong>Sale Baile</strong> es una plataforma web y móvil inteligente diseñada específicamente para la comunidad del baile social (Bachata, Salsa, Ritmos Caribeños y Urbanos). 
+      Actúa como un <strong>puente digital de 3 vías</strong> que conecta a quienes quieren salir a bailar o aprender, a quienes organizan las fiestas/clases, y al Administrador general que gestiona y monetiza la plataforma.
+    </p>
+
+    <div class="diagram">
+      <div class="node">
+        <div class="node-title">👤 Bailarín / Alumno</div>
+        <div class="node-desc">Explora, filtra y compra entradas</div>
+      </div>
+      <div class="arrow">⇄</div>
+      <div class="node" style="border-color: #ff2d55; background: #261624;">
+        <div class="node-title">⚡ SALE BAILE</div>
+        <div class="node-desc">Nube en tiempo real & Boletería</div>
+      </div>
+      <div class="arrow">⇄</div>
+      <div class="node">
+        <div class="node-title">🎪 Organizador / Staff</div>
+        <div class="node-desc">Publica flyers y escanea QRs</div>
+      </div>
+    </div>
+
+    <h2>2. Los 3 Roles de Usuarios (Cómo interactúa cada uno)</h2>
+
+    <div class="card">
+      <div class="card-title"><span class="tag tag-user">ROL 1</span> 👤 El Bailarín (Usuario Común)</div>
+      <ul>
+        <li><strong>Cartelera Visual en Vivo:</strong> Ve los flyers de eventos ordenados por fecha (Hoy, Mañana, Fin de semana).</li>
+        <li><strong>GPS y Distancia Exacta:</strong> La app calcula a cuántos kilómetros está cada evento (ejemplo: a 2.5 km en Plaza Los Patos).</li>
+        <li><strong>Filtro por Ritmos:</strong> Puede elegir ver solo Bachata Sensual, Salsa Cubana, talleres, boliches o eventos gratuitos.</li>
+        <li><strong>Compra de Entradas & Código QR:</strong> Compra su pase anticipado y la app le genera un boleto con QR que queda guardado en <em>"Mis Entradas"</em> para mostrar en la puerta.</li>
+        <li><strong>Historial Automático:</strong> Los eventos con más de 24 horas de finalizados pasan a la sección de Historial, manteniendo la cartelera limpia.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="tag tag-org">ROL 2</span> 🎪 El Organizador (Profesores y Productores)</div>
+      <ul>
+        <li><strong>Solicitud de Alta:</strong> Envían su solicitud al Administrador para ser verificados.</li>
+        <li><strong>Subida Rápida de Flyers:</strong> La app comprime las imágenes automáticamente para que no pesen y carguen al instante.</li>
+        <li><strong>Control de Staff en Puerta:</strong> Pueden designar el correo de un colaborador para que actúe como <strong>Staff</strong>. El Staff usa la cámara del celular para escanear los códigos QR y dar ingreso sin riesgo de fraudes ni entradas duplicadas.</li>
+        <li><strong>Monitoreo de Recaudación:</strong> Saben cuántas entradas se vendieron y cuántas personas ingresaron en tiempo real.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="tag tag-admin">ROL 3</span> 👑 El Administrador (Dueño de la Plataforma)</div>
+      <ul>
+        <li><strong>Centro de Solicitudes:</strong> Cada nuevo organizador o nuevo flyer aparece de inmediato en tu panel para ser revisado.</li>
+        <li><strong>Aprobación con 1 Clic:</strong> Puedes aprobar un evento de forma estándar o marcarlo como <strong>⭐ Destacado</strong> (para que aparezca arriba de todo en la portada).</li>
+        <li><strong>Comisiones y Reventa:</strong> Puedes configurar comisiones por cada entrada vendida a través de la aplicación.</li>
+        <li><strong>Sincronización en la Nube:</strong> Todo cambio que hagas se replica al instante en todos los dispositivos del país.</li>
+      </ul>
+    </div>
+
+    <h2>3. ¿Cómo Funciona la Boletería Digital y el Escaneo QR?</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Paso</th>
+          <th>Acción</th>
+          <th>Resultado en la Aplicación</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Compra</strong></td>
+          <td>El usuario compra su entrada anticipada.</td>
+          <td>Se genera un código QR criptográfico único asociado a su ID.</td>
+        </tr>
+        <tr>
+          <td><strong>2. Custodia</strong></td>
+          <td>El boleto queda en "Mis Entradas".</td>
+          <td>No requiere imprimir papel; funciona offline en el celular.</td>
+        </tr>
+        <tr>
+          <td><strong>3. Puerta</strong></td>
+          <td>El Staff abre el escáner de la app y enfoca el QR.</td>
+          <td>La app avisa en verde si es válida o en rojo si ya fue utilizada.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>4. ¿Cómo Funciona la Tecnología por Dentro?</h2>
+    <div class="card">
+      <ul>
+        <li><strong>Firebase Realtime Database (Base de Datos en Vivo):</strong> Es el cerebro central en la nube. Si tú apruebas un flyer desde tu teléfono, en 1 segundo aparece en el teléfono de todos los bailarines sin necesidad de recargar.</li>
+        <li><strong>Firebase Hosting (Servidor Web):</strong> La página está alojada en servidores mundiales de alta velocidad en <code>https://salebaile.web.app</code> disponible las 24 horas.</li>
+        <li><strong>GitHub (Caja Fuerte de Código):</strong> Todo el código fuente, componentes y configuraciones están guardados en el repositorio oficial para que puedas abrir el proyecto en cualquier computadora en el futuro.</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      © 2026 Sale Baile / Hoy Bailamos • Plataforma Oficial de Difusión y Boletería de Baile.
+    </div>
+  </div>
+</body>
+</html>

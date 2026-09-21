@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "sale_baile": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

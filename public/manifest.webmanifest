@@ -1,0 +1,30 @@
+{
+  "name": "Sale Baile - Descubre Dónde Bailar",
+  "short_name": "Sale Baile",
+  "description": "Encuentra sociales, clases, talleres y festivales de bachata, salsa, rock, cachengue, tango y más cercanos a tu ubicación",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#141316",
+  "theme_color": "#141316",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/branding/favicon_dark_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/branding/favicon_dark_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/branding/app_icon_rrss_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

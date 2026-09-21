@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="50%" stop-color="#fb923c" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e2433" />
+      <stop offset="100%" stop-color="#07090e" />
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bg)" />
+  <circle cx="256" cy="256" r="220" stroke="url(#grad)" stroke-width="8" stroke-dasharray="16 8" opacity="0.4"/>
+  <!-- Musical note / Dance passion symbol -->
+  <path d="M220 370 C190 370 165 350 165 320 C165 290 190 270 220 270 C245 270 265 285 270 305 L270 160 L360 135 L360 190 L290 210 L290 320 C290 350 265 370 235 370 Z" fill="url(#grad)"/>
+  <!-- Heart rhythm element -->
+  <path d="M340 240 C320 220 290 230 280 250 C270 230 240 220 220 240 C195 265 220 300 280 340 C340 300 365 265 340 240 Z" fill="#f43f5e" opacity="0.3"/>
+</svg>
