@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { EventItem, EventReport, EventReview, PromoterSeller, PromoterCustomFlyer } from '../types';
-import { INITIAL_MOCK_EVENTS, INITIAL_MOCK_REVIEWS, INITIAL_MOCK_PROMOTERS } from './mockData';
+import { INITIAL_MOCK_REVIEWS, INITIAL_MOCK_PROMOTERS } from './mockData';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -20,23 +20,18 @@ export function getLocalEvents(): EventItem[] {
     const saved = localStorage.getItem(STORAGE_EVENTS_KEY);
     if (saved) {
       const parsed: EventItem[] = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Filtrar eventos obsoletos o con flyers antiguos
-        const cleaned = parsed.filter(
-          (e) =>
-            e.id !== 'evt-merlo-bachata-los-patos' &&
-            !e.flyer_url?.includes('flyer_bachata_patos_18hs.jpg')
-        );
-        const mergedMap = new Map<string, EventItem>();
-        INITIAL_MOCK_EVENTS.forEach((e) => mergedMap.set(e.id, e));
-        cleaned.forEach((e) => mergedMap.set(e.id, e));
-        return Array.from(mergedMap.values());
+      if (Array.isArray(parsed)) {
+        // Devolver solo eventos reales guardados en localStorage.
+        // Sin eventos demo, sin mezclar con datos inventados.
+        return parsed;
       }
     }
   } catch (e) {
     console.warn('Error reading localStorage events', e);
   }
-  return INITIAL_MOCK_EVENTS;
+  // No hay eventos reales → devolver array vacio.
+  // La cartelera mostrara el estado de "sin eventos" correctamente.
+  return [];
 }
 
 export function saveLocalEvents(events: EventItem[]): void {

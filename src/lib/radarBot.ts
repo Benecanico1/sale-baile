@@ -95,7 +95,7 @@ export interface RadarDraftItem {
   raw_caption?: string;
   extracted_data: Partial<EventItem>;
   confidence_score: number; // 0 to 100
-  status: 'pending' | 'published' | 'dismissed';
+  status: 'pending' | 'published' | 'dismissed' | 'needs_review';
   validity_status: EventValidityStatus;
   validity_reason: string;
   days_until_event: number;
@@ -108,6 +108,14 @@ const STORAGE_MONITORED_ACCOUNTS = 'salebaile_monitored_accounts_v6';
 
 export const DEFAULT_MONITORED_ACCOUNTS: MonitoredAccount[] = [
   { id: 'acc-melanybys', handle: '@melanybys', name: 'Melany Bys', category_tag: 'bachata', is_active: true },
+  { id: 'acc-bailamosacademia', handle: '@bailamosacademia', name: 'Club Bailamos (Ramos Mejia)', category_tag: 'bachata', is_active: true },
+  { id: 'acc-chambea', handle: '@chambeasalsaybachata', name: 'Chambea Salsa & Bachata (Moron/Tigre)', category_tag: 'salsa', is_active: true },
+  { id: 'acc-saborlatino', handle: '@saborlatino.ok', name: 'Academia Sabor Latino (Monte Grande)', category_tag: 'salsa', is_active: true },
+  { id: 'acc-lasalsera', handle: '@lasalseracom', name: 'La Salsera (CABA)', category_tag: 'salsa', is_active: true },
+  { id: 'acc-jorgesolohaga', handle: '@jorge_solohaga', name: 'Jorge Solohaga (Salsa y Bachata)', category_tag: 'bachata', is_active: true },
+  { id: 'acc-salsaarriba', handle: '@salsaarriba', name: 'Salsa Arriba (CABA)', category_tag: 'salsa', is_active: true },
+  { id: 'acc-lavirubachatera', handle: '@lavirubachatera', name: 'La Viru Bachatera', category_tag: 'bachata', is_active: true },
+  { id: 'acc-ceresitobi', handle: '@ceresitobi', name: 'Ceresito BI (Moron)', category_tag: 'salsa', is_active: true },
 ];
 
 /**
@@ -158,12 +166,16 @@ export function saveMonitoredAccounts(accounts: MonitoredAccount[]): void {
 
 const STORAGE_GEMINI_API_KEY = 'salebaile_gemini_api_key';
 
+const ENV_GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+
 export function getGeminiApiKey(): string {
   try {
-    return localStorage.getItem(STORAGE_GEMINI_API_KEY) || '';
-  } catch (e) {
-    return '';
-  }
+    const localKey = localStorage.getItem(STORAGE_GEMINI_API_KEY);
+    // Prioridad: localStorage (configurada manualmente) > .env (configurada en deploy)
+    if (localKey && localKey.trim()) return localKey.trim();
+    if (ENV_GEMINI_API_KEY) return ENV_GEMINI_API_KEY;
+  } catch (e) {}
+  return ENV_GEMINI_API_KEY || '';
 }
 
 export function saveGeminiApiKey(key: string): void {
@@ -638,24 +650,32 @@ export async function analyzeFlyerWithGeminiVision(
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-    const prompt = `Eres un asistente de IA experto en auditar flyers de baile (Bachata, Salsa, etc.).
-Observa cuidadosamente el diseño gráfico de este flyer y el pie de foto de Instagram adjunto:
-"${rawText}"
+    const prompt = `Eres un extractor de datos de flyers de eventos de baile. Tu UNICO trabajo es leer lo que ESTA ESCRITO en la imagen y el texto. No interpretes, no asumas, no completes informacion faltante.
 
-Tu misión es extraer los datos REALES con máxima precisión, tal como los vería un humano:
-1. "title": El NOMBRE o TÍTULO principal del evento (el nombre destacado o fiesta en el flyer).
-2. "organizer_name": El nombre de la persona, academia o productora que organiza (o null si no figura).
-3. "venue_name": Nombre del salón, boliche o club donde se hace (o null si no figura).
-4. "address": Dirección física exacta (calle y número) o null si no figura.
-5. "city": Barrio, localidad o ciudad (ej: "Palermo", "Morón", "Buenos Aires") o null si no figura.
-6. "start_date": Fecha del evento en formato "YYYY-MM-DD". Si el año no figura, asume el año actual.
-7. "start_time_hour": Hora de inicio en formato "HH:MM" (ej: "22:00").
-8. "price": Si en el flyer figura un precio numérico de entrada/puerta/general, devuélvelo como número entero (ej: 8000). Si no figura ningún precio ni dice gratis, pon null.
-9. "is_free": true si el flyer indica expresamente que es gratis o entrada libre; false en caso contrario.
-10. "genre_family": "salsa-y-bachata" si tiene ambos ritmos salsa y bachata; "bachata" si es solo de bachata; "salsa" si es de salsa sola (cubana, venezolana, en línea, etc.); "rock" si es rock and roll o swing; "tango" si es tango o milonga; "cachengue" si es fiesta/cumbia/reggaeton; "folklore" si es folklore/peña; "urbano" si es hip hop/dancehall; u "otros".
+REGLAS ABSOLUTAS:
+- Si un dato NO aparece claramente en la imagen o el texto, pon null. SIN EXCEPCIONES.
+- No asumas la ciudad aunque reconozcas el barrio. Solo pon la ciudad si esta escrita.
+- No asumas el precio. Solo ponlo si hay un numero visible con signo de pesos ($), la palabra "pesos", "entrada", "puerta", "valor", "ticket" o "costo" cerca.
+- No asumas el organizador por el estilo del flyer. Solo ponlo si esta escrito.
+- Si la fecha no es legible o ambigua, pon null en start_date. No adivines.
+- Si el flyer no tiene claramente la palabra "gratis", "entrada libre" o "sin cargo", pon is_free: false y price: null.
+- El año: si NO esta escrito en el flyer, pon null. No asumas el año actual.
 
-IMPORTANTE: Si un dato no figura en el flyer, pon null. NO INVENTES NADA.
-Responde únicamente con un objeto JSON válido.`;
+Extrae SOLO estos campos:
+1. "title": El titulo principal del evento escrito en el flyer. null si no hay titulo claro.
+2. "organizer_name": Nombre del organizador escrito en el flyer. null si no figura.
+3. "venue_name": Nombre del lugar/salon. null si no figura.
+4. "address": Direccion escrita (calle y numero). null si no figura.
+5. "city": Ciudad o barrio escrito en el flyer. null si no figura.
+6. "start_date": Fecha en formato YYYY-MM-DD. null si no esta claramente escrita.
+7. "start_time_hour": Hora de inicio en formato HH:MM. null si no figura.
+8. "price": Precio numerico de entrada. null si no figura o si es gratis.
+9. "is_free": true SOLO si dice "gratis", "entrada libre" o "sin cargo". false en caso contrario.
+10. "genre_family": "bachata", "salsa", "salsa-y-bachata", "tango", "rock", "cachengue", "folklore", "urbano" u "otros". Segun lo que diga el flyer.
+
+Texto adjunto de Instagram: "${rawText}"
+
+Responde SOLO con un objeto JSON valido. Si un campo no esta en el flyer, debe ser null, no un string vacio.`;
 
     const payload = {
       contents: [
@@ -701,6 +721,112 @@ Responde únicamente con un objeto JSON válido.`;
 }
 
 /**
+ * Validaciones post-extraccion: verifica que los datos de Gemini sean reales y no inventados.
+ * Devuelve un score de confianza (0-100) y una lista de problemas detectados.
+ */
+function validateGeminiResult(aiResult: {
+  title?: string | null;
+  organizer_name?: string | null;
+  venue_name?: string | null;
+  address?: string | null;
+  city?: string | null;
+  start_date?: string | null;
+  start_time_hour?: string | null;
+  price?: number | null;
+  is_free?: boolean | null;
+  genre_family?: string | null;
+}): { confidence: number; issues: string[]; isValid: boolean } {
+  const issues: string[] = [];
+  let confidence = 0;
+
+  // Titulo: obligatorio y debe ser especifico (no generico)
+  if (aiResult.title && aiResult.title.trim().length >= 3) {
+    confidence += 15;
+    // Titulos genericos sospechosos
+    const genericTitles = ['social de baile', 'evento de baile', 'noche de baile', 'fiesta de baile'];
+    if (genericTitles.includes(aiResult.title.toLowerCase().trim())) {
+      issues.push('Titulo demasiado generico');
+      confidence -= 5;
+    }
+  } else {
+    issues.push('Falta titulo del evento');
+  }
+
+  // Fecha: obligatoria para confianza alta
+  if (aiResult.start_date) {
+    const parsedDate = new Date(aiResult.start_date);
+    const now = new Date();
+    if (!isNaN(parsedDate.getTime())) {
+      if (parsedDate < now) {
+        issues.push('Fecha del evento esta en el pasado');
+      } else {
+        confidence += 20;
+      }
+    } else {
+      issues.push('Fecha invalida o no parseable');
+    }
+  } else {
+    issues.push('Falta fecha del evento — el flyer no la especifica claramente');
+  }
+
+  // Direccion: valida si existe y no es generica
+  if (aiResult.address && aiResult.address.trim() !== 'Dirección a confirmar' && aiResult.address.trim().length >= 5) {
+    confidence += 15;
+  } else {
+    issues.push('Falta direccion del evento');
+  }
+
+  // Ciudad: valida si existe
+  if (aiResult.city && aiResult.city.trim().length >= 2) {
+    confidence += 10;
+  } else {
+    issues.push('Falta ciudad del evento');
+  }
+
+  // Precio: valido si esta en rango razonable (1000-100000 ARS, 2025-2026)
+  if (aiResult.is_free) {
+    confidence += 10;
+  } else if (aiResult.price !== null && aiResult.price !== undefined) {
+    if (aiResult.price >= 500 && aiResult.price <= 250000) {
+      confidence += 10;
+    } else if (aiResult.price > 0) {
+      issues.push(`Precio fuera de rango razonable: ${aiResult.price} ARS`);
+    }
+  }
+  // Si no hay precio ni es gratis, no penaliza (puede ser que no figure)
+
+  // Organizador: valido si existe
+  if (aiResult.organizer_name && aiResult.organizer_name.trim().length >= 2) {
+    confidence += 10;
+  }
+
+  // Venue: valido si existe
+  if (aiResult.venue_name && aiResult.venue_name.trim().length >= 2) {
+    confidence += 5;
+  }
+
+  // Genero: valido si existe
+  if (aiResult.genre_family && aiResult.genre_family.trim().length >= 2) {
+    confidence += 5;
+  }
+
+  // Hora: valido si existe
+  if (aiResult.start_time_hour && aiResult.start_time_hour.trim() !== '') {
+    confidence += 10;
+  }
+
+  // Un evento es valido (se puede publicar) si tiene al menos titulo + fecha + direccion
+  const titleStr = aiResult.title?.trim() ?? '';
+  const dateStr = aiResult.start_date ?? '';
+  const addrStr = aiResult.address?.trim() ?? '';
+  const isValid = titleStr.length >= 3 &&
+                   dateStr.length > 0 && !isNaN(new Date(dateStr).getTime()) &&
+                   addrStr.length >= 5;
+
+  return { confidence: Math.min(confidence, 100), issues, isValid };
+}
+
+/**
  * Motor de IA y Visión Artificial: analiza un texto y/o flyer para estructurar el evento y calcular vigencia
  */
 export async function analyzeFlyerWithAI(params: {
@@ -716,22 +842,37 @@ export async function analyzeFlyerWithAI(params: {
   if (geminiKey && imageUrl && !imageUrl.startsWith('data:image/svg')) {
     const aiResult = await analyzeFlyerWithGeminiVision(imageUrl, rawText, geminiKey);
     if (aiResult) {
-      const finalTitle = aiResult.title || (sourceAccount ? `Evento de ${sourceAccount}` : 'Social de Baile');
+      // Validar los datos extraidos por Gemini antes de usarlos
+      const validation = validateGeminiResult(aiResult);
+
+      const finalTitle = aiResult.title || (sourceAccount ? `Evento de ${sourceAccount}` : 'Evento sin titulo');
       const finalVenue = aiResult.venue_name || 'Lugar a confirmar';
-      const finalAddress = aiResult.address || 'Dirección a confirmar';
+      const finalAddress = aiResult.address || 'Direccion a confirmar';
       const finalCity = aiResult.city || 'Buenos Aires';
-      const finalOrganizer = aiResult.organizer_name || (sourceAccount ? sourceAccount.replace('@', '') : 'Organizador Verificado');
+      const finalOrganizer = aiResult.organizer_name || (sourceAccount ? sourceAccount.replace('@', '') : 'Organizador a confirmar');
       const finalPrice = aiResult.is_free ? undefined : aiResult.price;
       const isFree = !!aiResult.is_free;
 
-      const dateAnalysis = parseEventDateAndValidity(aiResult.start_date || rawText);
-      const startTime = aiResult.start_date
-        ? `${aiResult.start_date}T${aiResult.start_time_hour || '22:00'}:00.000Z`
-        : `${dateAnalysis.startDate}T${dateAnalysis.startTimeHour}:00.000Z`;
+      // Si Gemini no devolvio fecha, NO inventar una. Marcar como tentative.
+      let dateAnalysis: ParsedDateResult;
+      let startTime: string;
+      if (aiResult.start_date) {
+        dateAnalysis = parseEventDateAndValidity(aiResult.start_date);
+        startTime = `${aiResult.start_date}T${aiResult.start_time_hour || '22:00'}:00.000Z`;
+      } else {
+        // Sin fecha en el flyer → no inventar fecha. Usar fecha actual como placeholder.
+        dateAnalysis = parseEventDateAndValidity(rawText);
+        if (dateAnalysis.validityStatus === 'tentative' && !aiResult.start_date) {
+          // El flyer no tiene fecha clara → marcar para revision manual
+          startTime = new Date().toISOString();
+        } else {
+          startTime = `${dateAnalysis.startDate}T${dateAnalysis.startTimeHour}:00.000Z`;
+        }
+      }
 
       const finalGenreFamily = aiResult.genre_family && aiResult.genre_family !== 'caribeno'
         ? aiResult.genre_family
-        : 'salsa-y-bachata';
+        : 'otros';
 
       const finalSubgenres =
         finalGenreFamily === 'bachata' ? ['bachata-sensual'] :
@@ -743,16 +884,24 @@ export async function analyzeFlyerWithAI(params: {
         finalGenreFamily === 'folklore' ? ['chacarera'] :
         finalGenreFamily === 'urbano' ? ['hiphop'] : ['fusion'];
 
-      // Geocodificación precisa de la dirección para ubicar en el Radar de Baile
+      // Geocodificacion: solo si tenemos una direccion real
       let finalLat = -34.5880;
       let finalLng = -58.4350;
-      if (finalAddress && finalAddress !== 'Dirección a confirmar') {
+      let finalProvince = 'Capital Federal';
+      if (finalAddress && finalAddress !== 'Direccion a confirmar') {
         try {
           const geoQuery = `${finalAddress}, ${finalCity || 'Buenos Aires'}`;
           const geoRes = await searchAddressGeocode(geoQuery);
           if (geoRes && geoRes.length > 0) {
             finalLat = geoRes[0].lat;
             finalLng = geoRes[0].lon;
+            // Determinar provincia segun la ciudad devuelta por geocoding
+            const geoCity = (geoRes[0].display_name || '').toLowerCase();
+            if (geoCity.includes('capital federal') || geoCity.includes('ciudad aut')) {
+              finalProvince = 'Capital Federal';
+            } else if (geoCity.includes('buenos aires') || geoCity.includes('gba')) {
+              finalProvince = 'Buenos Aires';
+            }
           }
         } catch (gErr) {
           console.warn('Geocoding error:', gErr);
@@ -766,10 +915,12 @@ export async function analyzeFlyerWithAI(params: {
         source_account: sourceAccount || '@instagram',
         flyer_url: imageUrl,
         raw_caption: rawText || 'Información extraída con Visión Artificial Gemini.',
-        confidence_score: 99,
-        status: 'pending',
+        confidence_score: validation.confidence,
+        // Si la confianza es baja o faltan datos clave → needs_review (revision manual)
+        // Si la confianza es alta y tiene titulo+fecha+direccion → pending (listo para aprobar)
+        status: (!validation.isValid || validation.confidence < 50) ? 'needs_review' : 'pending',
         validity_status: dateAnalysis.validityStatus,
-        validity_reason: dateAnalysis.validityReason,
+        validity_reason: dateAnalysis.validityReason + (validation.issues.length > 0 ? ` | Problemas: ${validation.issues.join('; ')}` : ''),
         days_until_event: dateAnalysis.daysUntilEvent,
         detected_date_text: aiResult.start_date || dateAnalysis.rawDateMatched,
         created_at: new Date().toISOString(),
@@ -786,7 +937,7 @@ export async function analyzeFlyerWithAI(params: {
           venue_name: finalVenue,
           address: finalAddress,
           city: finalCity,
-          province: 'Capital Federal',
+          province: finalProvince,
           country: 'Argentina',
           latitude: finalLat,
           longitude: finalLng,
@@ -926,7 +1077,7 @@ export async function analyzeFlyerWithAI(params: {
   }
 
   // Organizador: si el flyer lo menciona o la cuenta que lo publica
-  let organizerName = sourceAccount ? sourceAccount.replace('@', '') : 'Organizador Verificado';
+  let organizerName = sourceAccount ? sourceAccount.replace('@', '') : 'Organizador a confirmar';
   const orgMatch = combinedText.match(/(?:organiza|organizan|organizador|producción|produce|de la mano de)[\s:]+([A-Za-zÁÉÍÓÚáéíóúñ\s]{3,30})/i);
   if (orgMatch && orgMatch[1]) {
     organizerName = orgMatch[1].trim();
@@ -943,7 +1094,7 @@ export async function analyzeFlyerWithAI(params: {
     title = titleCandidates[0].replace(/^[🔥✨💃🕺🎉📍🎟️🎸🎵\s]+/, '').trim();
   }
   if (!title) {
-    title = sourceAccount ? `Evento de ${sourceAccount}` : 'Social de Baile';
+    title = sourceAccount ? `Evento de ${sourceAccount}` : 'Evento sin titulo';
   }
 
   const start_time = `${dateAnalysis.startDate}T${dateAnalysis.startTimeHour}:00.000Z`;
@@ -954,6 +1105,7 @@ export async function analyzeFlyerWithAI(params: {
   // Geocodificación precisa de la dirección para ubicar en el Radar de Baile
   let finalLat = -34.5880;
   let finalLng = -58.4350;
+  let finalProvince = 'Capital Federal';
   if (address && address !== 'Dirección a confirmar') {
     try {
       const geoQuery = `${address}, ${city || 'Buenos Aires'}`;
@@ -961,11 +1113,32 @@ export async function analyzeFlyerWithAI(params: {
       if (geoRes && geoRes.length > 0) {
         finalLat = geoRes[0].lat;
         finalLng = geoRes[0].lon;
+        // Determinar provincia segun geocoding
+        const geoCity = (geoRes[0].display_name || '').toLowerCase();
+        if (geoCity.includes('capital federal') || geoCity.includes('ciudad aut')) {
+          finalProvince = 'Capital Federal';
+        } else if (geoCity.includes('buenos aires') || geoCity.includes('gba')) {
+          finalProvince = 'Buenos Aires';
+        }
       }
     } catch (gErr) {
       console.warn('Geocoding error:', gErr);
     }
   }
+
+  // Scoring de confianza para el flujo OCR fallback
+  let ocrConfidence = 0;
+  if (title && title !== 'Evento sin titulo') ocrConfidence += 15;
+  if (dateAnalysis.validityStatus === 'upcoming') ocrConfidence += 20;
+  if (address && address !== 'Dirección a confirmar') ocrConfidence += 15;
+  if (city && city !== 'Buenos Aires') ocrConfidence += 10;
+  if (organizerName && organizerName !== 'Organizador a confirmar') ocrConfidence += 10;
+  if (venueName && venueName !== 'Lugar a confirmar') ocrConfidence += 5;
+  if (genre_family && genre_family !== 'otros') ocrConfidence += 5;
+  if (dateAnalysis.startTimeHour && dateAnalysis.startTimeHour !== '22:00') ocrConfidence += 10;
+  if (price !== undefined || is_free) ocrConfidence += 10;
+
+  const ocrIsValid = title.length >= 3 && address !== 'Dirección a confirmar' && dateAnalysis.validityStatus !== 'expired';
 
   const draft: RadarDraftItem = {
     id: `draft-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -974,8 +1147,8 @@ export async function analyzeFlyerWithAI(params: {
     source_account: sourceAccount || '@instagram',
     flyer_url: finalFlyerUrl,
     raw_caption: ocrFlyerText ? `${rawText}\n\n[Texto detectado en Flyer]:\n${ocrFlyerText.trim()}` : rawText || 'Información extraída de Instagram.',
-    confidence_score: dateAnalysis.validityStatus === 'upcoming' ? 96 : 85,
-    status: 'pending',
+    confidence_score: Math.min(ocrConfidence, 100),
+    status: (!ocrIsValid || ocrConfidence < 50) ? 'needs_review' : 'pending',
     validity_status: dateAnalysis.validityStatus,
     validity_reason: dateAnalysis.validityReason,
     days_until_event: dateAnalysis.daysUntilEvent,
@@ -994,7 +1167,7 @@ export async function analyzeFlyerWithAI(params: {
       venue_name: venueName,
       address,
       city,
-      province: 'Capital Federal',
+      province: finalProvince,
       country: 'Argentina',
       latitude: finalLat,
       longitude: finalLng,
