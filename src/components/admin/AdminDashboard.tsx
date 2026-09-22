@@ -59,7 +59,6 @@ import {
 } from '../../lib/deviceTracker';
 import { syncChannel } from '../../lib/cloudRequests';
 import { ManualTicketSaleModal } from './ManualTicketSaleModal';
-import { RadarBotInbox } from './RadarBotInbox';
 import { AdminEditEventModal } from './AdminEditEventModal';
 import { EventForm } from '../organizer/EventForm';
 import { EditProfileModal } from '../account/EditProfileModal';
@@ -93,7 +92,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onRefreshAll,
 }) => {
   const { usersList, approveOrganizer, rejectOrganizer, registerOrganizerDirectly, setUserRole, updateUserById, deleteUser, syncFromCloud } = useAuth();
-  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'reports' | 'all' | 'tickets' | 'radar' | 'devices' | 'bots'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'reports' | 'all' | 'tickets' | 'devices' | 'bots'>('pending');
   const [userFilter, setUserFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [eventFilter, setEventFilter] = useState<'all' | 'featured' | 'standard'>('all');
   const [deviceFilter, setDeviceFilter] = useState<'all' | 'installed' | 'android' | 'ios' | 'desktop'>('all');
@@ -469,7 +468,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <div className="flex items-center gap-1 overflow-x-auto border-b border-zinc-800/50 pb-px -mb-px">
         {([
           { id: 'pending' as const, label: 'Solicitudes', icon: <Clock className="w-3.5 h-3.5" />, count: pendingOrganizers.length + pendingEvents.length },
-          { id: 'radar' as const, label: 'Radar', icon: <Bot className="w-3.5 h-3.5" />, count: undefined },
           { id: 'tickets' as const, label: 'Ventas', icon: <DollarSign className="w-3.5 h-3.5" />, count: ticketStats.pendingOrdersCount > 0 ? ticketStats.pendingOrdersCount : undefined },
           { id: 'devices' as const, label: 'Equipos', icon: <Smartphone className="w-3.5 h-3.5" />, count: undefined },
           { id: 'users' as const, label: 'Organizadores', icon: <Users className="w-3.5 h-3.5" />, count: usersList.length },
@@ -501,21 +499,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         ))}
       </div>
 
-      {/* Tab: Radar Bot de Instagram & Extracción IA */}
-      {activeTab === 'radar' && (
-        <RadarBotInbox
-          onPublishEvent={(evtData) => {
-            if (onCreateEvent) {
-              onCreateEvent(evtData, false);
-            }
-            if (onRefreshAll) {
-              onRefreshAll();
-            }
-          }}
-        />
-      )}
-
-      {/* Tab: Centro Unificado de Solicitudes Pendientes */}
+      {/* Tab: Solicitudes Pendientes */}
       {activeTab === 'pending' && (
         <div className="space-y-5">
           {/* Sub-Sección 1: Solicitudes de Alta de Organizadores */}
