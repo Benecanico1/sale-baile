@@ -333,18 +333,34 @@ export function parseEventDateAndValidity(
     }
   }
 
-  // Pattern D: "este viernes", "este sábado", "próximo viernes", "todos los viernes"
+  // Pattern D: "este viernes", "este sábado", "próximo viernes", "todos los viernes", "tus miércoles", "los miércoles"
   if (!targetDate) {
-    const dayOfWeekRegex = /(?:este|proximo|próximo|todos los|cada)\s+(lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|domingo)/i;
+    const dayOfWeekRegex = /(?:este|proximo|próximo|todos los|cada|tus|los|nuestros)\s+(lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|domingo)/i;
     const matchD = cleanText.match(dayOfWeekRegex);
     if (matchD) {
       const targetDayOfWeek = DAYS_OF_WEEK_MAP[matchD[1].toLowerCase()];
       if (targetDayOfWeek !== undefined) {
         const todayDay = referenceDate.getDay();
         let diff = targetDayOfWeek - todayDay;
-        if (diff < 0) diff += 7;
+        if (diff <= 0) diff += 7;
         targetDate = new Date(referenceDate.getTime() + diff * 86400000);
         rawDateMatched = matchD[0];
+      }
+    }
+  }
+
+  // Pattern E: día de la semana solo (sin prefijo) — "miércoles en Morón", "viernes en Eros"
+  if (!targetDate) {
+    const bareDayRegex = /\b(lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|domingo)\b/i;
+    const matchE = cleanText.match(bareDayRegex);
+    if (matchE) {
+      const targetDayOfWeek = DAYS_OF_WEEK_MAP[matchE[1].toLowerCase()];
+      if (targetDayOfWeek !== undefined) {
+        const todayDay = referenceDate.getDay();
+        let diff = targetDayOfWeek - todayDay;
+        if (diff <= 0) diff += 7;
+        targetDate = new Date(referenceDate.getTime() + diff * 86400000);
+        rawDateMatched = matchE[0];
       }
     }
   }
