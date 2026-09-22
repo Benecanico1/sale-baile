@@ -231,8 +231,59 @@
 
     {"type": "pagebreak"},
 
-    {"type": "heading", "text": "11. Resumen del Ecosistema", "level": 1},
-    {"type": "paragraph", "text": "Los 8 agentes forman un ecosistema completo de automatizacion para Sale Baile:"},
+    {"type": "heading", "text": "11. Agente WhatsApp (agente_whatsapp.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Bot de WhatsApp Cloud API de Meta que funciona como punto de contacto entre organizadores y bailarines. Los organizadores mandan una foto del flyer por WhatsApp y el bot extrae los datos con Gemini Vision, crea el evento en Firebase y responde con los detalles para confirmar. Los bailarines consultan la cartelera por WhatsApp y reciben los eventos formateados con links."},
+    {"type": "heading", "text": "11.1 Comandos del bot", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Comando", "Respuesta", "Descripcion"],
+      ["HOY", "Eventos de hoy", "Lista de eventos publicados para hoy"],
+      ["PROXIMOS", "Proximos eventos", "Lista de los proximos 5 eventos"],
+      ["BACHATA", "Eventos de bachata", "Filtrado por ritmo bachata"],
+      ["SALSA", "Eventos de salsa", "Filtrado por ritmo salsa"],
+      ["TANGO", "Eventos de tango", "Filtrado por ritmo tango"],
+      ["COMPRAR", "Link de MercadoPago", "Instrucciones para comprar entradas"],
+      ["PUBLICAR", "Instrucciones", "Como publicar un evento (mandar foto)"],
+      ["AYUDA", "Lista de comandos", "Menu de ayuda completo"],
+      ["CONFIRMAR", "Publica evento", "Confirma el ultimo evento analizado"],
+      ["CORREGIR", "Edita evento", "Corrige datos del ultimo evento (ej: CORREGIR fecha 2026-10-01)"]
+    ]},
+    {"type": "heading", "text": "11.2 Flujo del organizador", "level": 2},
+    {"type": "paragraph", "text": "1. El organizador manda una foto del flyer por WhatsApp"},
+    {"type": "paragraph", "text": "2. El bot descarga la imagen y la analiza con Gemini Vision"},
+    {"type": "paragraph", "text": "3. Extrae: titulo, fecha, lugar, direccion, precio, ritmo, DJ, clase, social"},
+    {"type": "paragraph", "text": "4. Crea el evento en Firebase con status 'pendiente'"},
+    {"type": "paragraph", "text": "5. Responde con los datos extraidos para confirmar"},
+    {"type": "paragraph", "text": "6. El organizador escribe CONFIRMAR o CORREGIR"},
+    {"type": "paragraph", "text": "7. Al confirmar, el evento se publica en salebaile.web.app"},
+    {"type": "heading", "text": "11.3 Configuracion de WhatsApp Cloud API", "level": 2},
+    {"type": "paragraph", "text": "Para usar el bot necesitas:"},
+    {"type": "paragraph", "text": "1. Crear cuenta en https://business.facebook.com"},
+    {"type": "paragraph", "text": "2. WhatsApp Business > Cloud API > crear app"},
+    {"type": "paragraph", "text": "3. Obtener: WHATSAPP_TOKEN, WHATSAPP_PHONE_ID"},
+    {"type": "paragraph", "text": "4. Configurar webhook: URL https + verify token"},
+    {"type": "paragraph", "text": "5. Agregar variables al archivo .env"},
+    {"type": "paragraph", "text": "6. Instalar Flask: pip install flask"},
+    {"type": "paragraph", "text": "7. Ejecutar: python scripts/agente_whatsapp.py"},
+    {"type": "paragraph", "text": "8. Exponer publicamente con ngrok: ngrok http 5000"},
+    {"type": "paragraph", "text": "9. Configurar la URL del webhook en Meta Business Suite"},
+    {"type": "heading", "text": "11.4 Variables de entorno", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Variable", "Descripcion", "Donde obtenerla"],
+      ["WHATSAPP_TOKEN", "Token de acceso de Meta", "Meta Business > WhatsApp > API Setup"],
+      ["WHATSAPP_PHONE_ID", "ID del numero de telefono", "Meta Business > WhatsApp > Phone Number"],
+      ["WHATSAPP_VERIFY_TOKEN", "Token de verificacion del webhook", "Cualquier string (lo inventas vos)"],
+      ["VITE_GEMINI_API_KEY", "API key de Gemini Vision", "Google AI Studio (aistudio.google.com)"],
+      ["PORT", "Puerto del servidor (default 5000)", "Cualquier puerto libre"]
+    ]},
+    {"type": "heading", "text": "11.5 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_whatsapp.py"},
+    {"type": "paragraph", "text": "El servidor expone el webhook en /webhook. Meta envia los mensajes recibidos a esa URL. El bot los procesa y responde automaticamente."},
+    {"type": "paragraph", "text": "Para probar manualmente: GET http://localhost:5000/test/NUMERO?msg=Hola"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "12. Resumen del Ecosistema", "level": 1},
+    {"type": "paragraph", "text": "Los 9 agentes forman un ecosistema completo de automatizacion para Sale Baile:"},
     {"type": "table", "header": true, "rows": [
       ["Agente", "Funcion principal", "Escribe en Firebase"],
       ["agente_radar.py", "Scrapear Instagram y publicar eventos", "events.json"],
@@ -242,10 +293,11 @@
       ["agente_autodeteccion.py", "Detectar flyers nuevos y crear borradores", "auto_drafts.json"],
       ["agente_contenido.py", "Generar contenido para redes sociales", "(no escribe en Firebase)"],
       ["agente_estratega.py", "Analizar mercado y competencia", "(no escribe en Firebase)"],
-      ["agente_revisor.py", "Revisar codigo del proyecto", "(no escribe en Firebase)"]
+      ["agente_revisor.py", "Revisar codigo del proyecto", "(no escribe en Firebase)"],
+      ["agente_whatsapp.py", "Bot de WhatsApp Cloud API", "whatsapp_logs.json + events.json"]
     ]},
 
-    {"type": "heading", "text": "11.1 Pipeline recomendado", "level": 2},
+    {"type": "heading", "text": "12.1 Pipeline recomendado", "level": 2},
     {"type": "paragraph", "text": "Flujo de captacion de organizadores:"},
     {"type": "paragraph", "text": "1. agente_cazador.py -> Busca prospectos por hashtags y los puntua (sale_baile/leads, status: new)"},
     {"type": "paragraph", "text": "2. agente_outreach.py -> Genera DMs personalizados y marca como contacted (sale_baile/leads, status: contacted)"},
@@ -256,7 +308,7 @@
     {"type": "paragraph", "text": "7. agente_radar.py -> Scrapea y publica eventos de las cuentas monitoreadas"},
     {"type": "paragraph", "text": "8. agente_contenido.py -> Genera posts de redes para promocionar los eventos"},
 
-    {"type": "heading", "text": "11.2 Notas tecnicas", "level": 2},
+    {"type": "heading", "text": "12.2 Notas tecnicas", "level": 2},
     {"type": "paragraph", "text": "- Gemini 3.6 Flash puede devolver error 429 (Too Many Requests) cuando se satura. Todos los agentes tienen retry con backoff y plantillas de fallback."},
     {"type": "paragraph", "text": "- Apify Instagram Scraper tiene un costo por ejecucion. El Cazador usa 10 hashtags x 10 posts = ~100 posts por ejecucion."},
     {"type": "paragraph", "text": "- Los agentes que usan Gemini Vision (radar, autodeteccion) necesitan que la imagen del flyer se descargue primero, porque las URLs de Instagram CDN expiran."},
@@ -264,7 +316,7 @@
 
     {"type": "pagebreak"},
 
-    {"type": "heading", "text": "12. Stack Tecnologico", "level": 1},
+    {"type": "heading", "text": "13. Stack Tecnologico", "level": 1},
     {"type": "table", "header": true, "rows": [
       ["Componente", "Tecnologia", "Version"],
       ["Frontend", "React + Vite + TypeScript", "Vite 8.3"],
