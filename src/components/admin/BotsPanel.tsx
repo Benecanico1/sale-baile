@@ -15,6 +15,9 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
+  Server,
+  Zap,
+  AlertTriangle,
 } from 'lucide-react';
 import { BotResults } from './BotResults';
 
@@ -23,35 +26,21 @@ interface BotConfig {
   name: string;
   desc: string;
   icon: React.ReactNode;
-  color: string;
   confirm?: boolean;
 }
 
 const BOTS: BotConfig[] = [
-  { id: 'radar', name: 'Radar', desc: 'Scrapear Instagram y publicar eventos', icon: <Radar className="w-5 h-5" />, color: 'purple' },
-  { id: 'cazador', name: 'Cazador', desc: 'Buscar organizadores nuevos por hashtags', icon: <Target className="w-5 h-5" />, color: 'amber' },
-  { id: 'outreach', name: 'Outreach (Generar)', desc: 'Generar DMs sin enviar (modo seguro)', icon: <PenTool className="w-5 h-5" />, color: 'blue' },
-  { id: 'outreach_send', name: 'Outreach (Enviar)', desc: 'Enviar DMs REALES por Instagram', icon: <Send className="w-5 h-5" />, color: 'red', confirm: true },
-  { id: 'reportes', name: 'Reportes Semanales', desc: 'Métricas + sugerencias de mejora con IA', icon: <FileText className="w-5 h-5" />, color: 'emerald' },
-  { id: 'autodeteccion', name: 'Auto-Detección', desc: 'Detectar flyers nuevos y crear borradores', icon: <Search className="w-5 h-5" />, color: 'cyan' },
-  { id: 'contenido', name: 'Contenido', desc: 'Generar posts de redes sociales', icon: <PenTool className="w-5 h-5" />, color: 'pink' },
-  { id: 'estratega', name: 'Estratega', desc: 'Analizar mercado y competencia', icon: <TrendingUp className="w-5 h-5" />, color: 'indigo' },
-  { id: 'investigador', name: 'Investigador', desc: 'Buscar tecnologías nuevas', icon: <Microscope className="w-5 h-5" />, color: 'teal' },
-  { id: 'revisor', name: 'Revisor', desc: 'Revisar código del proyecto', icon: <Bug className="w-5 h-5" />, color: 'rose' },
+  { id: 'radar', name: 'Radar', desc: 'Scrapear Instagram y publicar eventos', icon: <Radar className="w-5 h-5" /> },
+  { id: 'cazador', name: 'Cazador', desc: 'Buscar organizadores nuevos por hashtags', icon: <Target className="w-5 h-5" /> },
+  { id: 'outreach', name: 'Outreach', desc: 'Generar DMs sin enviar (modo seguro)', icon: <PenTool className="w-5 h-5" /> },
+  { id: 'outreach_send', name: 'Envío DM', desc: 'Enviar DMs reales por Instagram', icon: <Send className="w-5 h-5" />, confirm: true },
+  { id: 'reportes', name: 'Reportes', desc: 'Métricas + sugerencias de mejora con IA', icon: <FileText className="w-5 h-5" /> },
+  { id: 'autodeteccion', name: 'Auto-Detect', desc: 'Detectar flyers nuevos y crear borradores', icon: <Search className="w-5 h-5" /> },
+  { id: 'contenido', name: 'Contenido', desc: 'Generar posts de redes sociales', icon: <PenTool className="w-5 h-5" /> },
+  { id: 'estratega', name: 'Estratega', desc: 'Analizar mercado y competencia', icon: <TrendingUp className="w-5 h-5" /> },
+  { id: 'investigador', name: 'Investigador', desc: 'Buscar tecnologías nuevas', icon: <Microscope className="w-5 h-5" /> },
+  { id: 'revisor', name: 'Revisor', desc: 'Revisar código del proyecto', icon: <Bug className="w-5 h-5" /> },
 ];
-
-const colorClasses: Record<string, { bg: string; text: string; border: string; ring: string }> = {
-  purple: { bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/40', ring: 'ring-purple-500/30' },
-  amber: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/40', ring: 'ring-amber-500/30' },
-  blue: { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/40', ring: 'ring-blue-500/30' },
-  red: { bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/40', ring: 'ring-rose-500/30' },
-  emerald: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/40', ring: 'ring-emerald-500/30' },
-  cyan: { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/40', ring: 'ring-cyan-500/30' },
-  pink: { bg: 'bg-pink-500/15', text: 'text-pink-400', border: 'border-pink-500/40', ring: 'ring-pink-500/30' },
-  indigo: { bg: 'bg-indigo-500/15', text: 'text-indigo-400', border: 'border-indigo-500/40', ring: 'ring-indigo-500/30' },
-  teal: { bg: 'bg-teal-500/15', text: 'text-teal-400', border: 'border-teal-500/40', ring: 'ring-teal-500/30' },
-  rose: { bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/40', ring: 'ring-rose-500/30' },
-};
 
 const DASHBOARD_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:8585'
@@ -68,18 +57,13 @@ export const BotsPanel: React.FC = () => {
     setCheckingServer(true);
     try {
       const resp = await fetch(`${DASHBOARD_URL}/api/bots`, { signal: AbortSignal.timeout(3000) });
-      if (resp.ok) {
-        setServerStatus('online');
-      } else {
-        setServerStatus('offline');
-      }
+      setServerStatus(resp.ok ? 'online' : 'offline');
     } catch {
       setServerStatus('offline');
     }
     setCheckingServer(false);
   };
 
-  // Verificar al montar
   React.useEffect(() => {
     checkServer();
   }, []);
@@ -102,7 +86,7 @@ export const BotsPanel: React.FC = () => {
       setHasError(data.error || false);
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        setOutput('⏱️ Timeout: el bot tardó demasiado. Puede seguir corriendo en el servidor.\n\nPara bots que scrapean Instagram (Radar, Cazador, Auto-Detección), puede tardar varios minutos.');
+        setOutput('⏱️ Timeout: el bot tardó demasiado. Puede seguir corriendo en el servidor.');
       } else {
         setOutput(`ℹ️ Ejecución manual no disponible desde el navegador\n\nLos bots ya corren automáticamente en la VPS (24/7):\n• Cazador: cada día a las 3 AM\n• Radar: cada día a las 6 AM\n• Auto-Detección: cada 6 horas\n• Reportes: cada lunes a las 9 AM\n\nPara ejecución manual, usá el acceso directo en tu PC:\n  doble clic en sale-baile-bots.bat\n\nLos resultados aparecen abajo en "Resultados de los Bots".`);
       }
@@ -114,154 +98,127 @@ export const BotsPanel: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      {/* Header del panel de bots */}
-      <div className="bg-gradient-to-br from-dark-900 via-[#131722] to-dark-950 p-5 rounded-3xl border border-dark-750 shadow-2xl">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-dance-crimson/30 to-dance-amber/20 border border-dance-coral/40 flex items-center justify-center text-dance-coral">
-              <Bot className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
-              Panel de Bots IA
-              </h2>
-              <p className="text-xs text-slate-300 mt-0.5">
-              Ejecutá los bots con un clic. Los resultados se guardan en Firebase automáticamente.
-              </p>
-            </div>
+      {/* Header minimalista */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-zinc-300">
+            <Bot className="w-5 h-5" />
           </div>
-
-          {/* Estado del servidor */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={checkServer}
-              disabled={checkingServer}
-              className="px-3 py-2 rounded-xl bg-dark-850 border border-dark-700 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${checkingServer ? 'animate-spin' : ''}`} />
-              <span>
-                {checkingServer ? 'Verificando...' :
-                 serverStatus === 'online' ? '🟢 Servidor online' :
-                 serverStatus === 'offline' ? '🔴 Servidor offline' :
-                 '⚪ Estado desconocido'}
-              </span>
-            </button>
+          <div>
+            <h2 className="text-base font-bold text-zinc-100">Bots IA</h2>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Automatización de eventos de baile</p>
           </div>
         </div>
 
-        {/* Aviso si el servidor está offline */}
-        {serverStatus === 'offline' && (
-          <div className="mt-4 p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-xs text-emerald-200 flex items-start gap-2.5">
-            <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <div className="space-y-1.5">
-              <p className="font-bold text-emerald-300">✅ Los bots ya corren automáticamente en la VPS (24/7)</p>
-              <p className="text-emerald-200/80">
-                No necesitás hacer nada manual — los bots se ejecutan solos:<br/>
-                • 🎯 Cazador: cada día a las 3 AM<br/>
-                • 📊 Radar: cada día a las 6 AM<br/>
-                • 🔍 Auto-Detección: cada 6 horas<br/>
-                • 📄 Reportes: cada lunes a las 9 AM<br/>
-                Los resultados aparecen abajo en "Resultados de los Bots" (se auto-actualiza cada 30s).
-              </p>
-              <p className="text-emerald-200/60 mt-1.5">
-                Los botones de ejecución manual están disponibles cuando el dashboard local está corriendo (opcional).<br/>
-                Para ejecución manual: <strong className="text-emerald-200">doble clic en sale-baile-bots.bat</strong>
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Indicador de servidor */}
+        <button
+          onClick={checkServer}
+          disabled={checkingServer}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/40 text-[11px] font-medium text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
+        >
+          <RefreshCw className={`w-3 h-3 ${checkingServer ? 'animate-spin' : ''}`} />
+          <span className="flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              serverStatus === 'online' ? 'bg-emerald-400' : serverStatus === 'offline' ? 'bg-zinc-600' : 'bg-zinc-600'
+            }`} />
+            {checkingServer ? 'Verificando...' :
+             serverStatus === 'online' ? 'VPS Online' :
+             serverStatus === 'offline' ? 'VPS Offline' : 'Verificando...'}
+          </span>
+        </button>
       </div>
 
-      {/* Grid de bots */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+      {/* Aviso VPS offline — discreto */}
+      {serverStatus === 'offline' && (
+        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/40 text-[11px] text-zinc-400">
+          <Server className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-medium text-zinc-300">Los bots ya corren automáticamente en la VPS (24/7)</p>
+            <p className="text-zinc-500">
+              Cazador 3 AM · Radar 6 AM · Auto-Detección cada 6h · Reportes lunes 9 AM.
+              Los resultados aparecen abajo. Para ejecución manual: <strong className="text-zinc-400">sale-baile-bots.bat</strong>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Grid de bots — minimalista */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         {BOTS.map((bot) => {
-          const c = colorClasses[bot.color] || colorClasses.purple;
           const isRunning = runningBot === bot.id;
           return (
             <button
               key={bot.id}
               onClick={() => runBot(bot)}
               disabled={isRunning}
-              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-2.5 ${c.bg} ${c.border} hover:scale-[1.02] active:scale-95 ${
-                isRunning ? `ring-2 ${c.ring} animate-pulse` : ''
+              className={`group p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-2.5 ${
+                isRunning
+                  ? 'bg-zinc-800/80 border-zinc-600 ring-1 ring-zinc-500/30'
+                  : 'bg-zinc-850/50 border-zinc-800/60 hover:border-zinc-600/60 hover:bg-zinc-800/50'
               } disabled:cursor-wait`}
             >
               <div className="flex items-center justify-between">
-                <div className={`w-10 h-10 rounded-xl ${c.bg} ${c.text} border ${c.border} flex items-center justify-center`}>
-                  {isRunning ? <Loader2 className="w-5 h-5 animate-spin" /> : bot.icon}
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                  isRunning
+                    ? 'bg-zinc-700/60 text-zinc-200'
+                    : 'bg-zinc-800/60 text-zinc-400 group-hover:text-zinc-200'
+                }`}>
+                  {isRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : bot.icon}
                 </div>
                 {bot.confirm && (
-                  <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[9px] font-black border border-rose-500/40">
-                    ⚠️ ENVÍO REAL
-                  </span>
-                )}
-                {isRunning && (
-                  <span className="text-[10px] font-bold text-amber-400 animate-pulse">Ejecutando...</span>
+                  <AlertTriangle className="w-3 h-3 text-amber-500/60" />
                 )}
               </div>
               <div>
-                <div className={`text-sm font-black ${c.text}`}>{bot.name}</div>
-                <div className="text-[11px] text-slate-400 mt-0.5 leading-snug">{bot.desc}</div>
+                <div className={`text-[13px] font-semibold ${isRunning ? 'text-zinc-200' : 'text-zinc-300 group-hover:text-zinc-100'}`}>
+                  {bot.name}
+                </div>
+                <div className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{bot.desc}</div>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-auto">
+              <div className="flex items-center gap-1 text-[10px] text-zinc-600 mt-auto">
                 {isRunning ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <Loader2 className="w-2.5 h-2.5 animate-spin" />
                 ) : (
-                  <Play className="w-3 h-3" />
+                  <Play className="w-2.5 h-2.5 group-hover:text-zinc-400" />
                 )}
-                <span>{isRunning ? 'Procesando...' : 'Ejecutar'}</span>
+                <span className="group-hover:text-zinc-400">{isRunning ? 'Procesando' : 'Ejecutar'}</span>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Output / Terminal */}
+      {/* Output / Terminal — discreto */}
       {output && (
-        <div className="bg-dark-950 border border-dark-750 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="flex items-center justify-between px-4 py-2.5 bg-dark-900 border-b border-dark-750">
+        <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-3.5 py-2 bg-zinc-850/60 border-b border-zinc-800/40">
             <div className="flex items-center gap-2">
               {hasError ? (
-                <XCircle className="w-4 h-4 text-rose-400" />
+                <XCircle className="w-3.5 h-3.5 text-rose-400/70" />
               ) : (
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-400/70" />
               )}
-              <span className="text-xs font-black text-slate-300">
-                {hasError ? 'Output con errores' : 'Output del bot'}
-              </span>
+              <span className="text-[11px] font-medium text-zinc-400">Output</span>
             </div>
             <button
               onClick={() => { setOutput(''); setHasError(false); }}
-              className="text-xs text-slate-500 hover:text-slate-300 font-bold cursor-pointer"
+              className="text-[11px] text-zinc-600 hover:text-zinc-300 font-medium cursor-pointer"
             >
               Limpiar
             </button>
           </div>
-          <div className="p-4 max-h-[400px] overflow-y-auto">
-            <pre className={`text-xs font-mono whitespace-pre-wrap ${hasError ? 'text-rose-300' : 'text-slate-300'}`}>
+          <div className="p-3.5 max-h-[400px] overflow-y-auto">
+            <pre className={`text-[11px] font-mono whitespace-pre-wrap leading-relaxed ${hasError ? 'text-rose-300/80' : 'text-zinc-400'}`}>
               {output}
             </pre>
           </div>
         </div>
       )}
 
-      {/* Información de Firebase */}
-      <div className="bg-dark-900 border border-dark-750 rounded-2xl p-4 text-xs text-slate-400 space-y-2">
-        <div className="flex items-center gap-2 font-bold text-slate-300">
-          <FileText className="w-4 h-4 text-dance-coral" />
-          <span>¿Dónde se guardan los resultados?</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pl-6">
-          <div>📊 <strong className="text-slate-300">Radar:</strong> events.json</div>
-          <div>🎯 <strong className="text-slate-300">Cazador:</strong> leads.json</div>
-          <div>📨 <strong className="text-slate-300">Outreach:</strong> leads.json (status: contacted)</div>
-          <div>📅 <strong className="text-slate-300">Reportes:</strong> weekly_reports.json</div>
-          <div>🔍 <strong className="text-slate-300">Auto-Detección:</strong> auto_drafts.json</div>
-          <div>💬 <strong className="text-slate-300">WhatsApp:</strong> whatsapp_logs.json</div>
-        </div>
-        <p className="text-[10px] text-slate-500 pt-1">
-          Todos los bots escriben en Firebase RTDB: salebaile.web.app → sale_baile/
-        </p>
+      {/* Info de almacenamiento — minimalista */}
+      <div className="flex items-center gap-2 px-1 text-[10px] text-zinc-600">
+        <Zap className="w-3 h-3" />
+        <span>Resultados guardados en Firebase RTDB → sale_baile/</span>
       </div>
 
       {/* === RESULTADOS DE LOS BOTS === */}
