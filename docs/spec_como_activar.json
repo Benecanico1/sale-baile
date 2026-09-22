@@ -1,0 +1,146 @@
+{
+  "title": "Sale Baile - Como Activar y Ejecutar los Bots",
+  "author": "Ingenieria JH - Sale Baile",
+  "page_size": "A4",
+  "page_numbers": true,
+  "elements": [
+    {"type": "heading", "text": "Como Activar y Ejecutar los Bots de Sale Baile", "level": 1},
+    {"type": "paragraph", "text": "Guia paso a paso para ejecutar los 10 bots y agentes de inteligencia artificial del proyecto Sale Baile."},
+    {"type": "paragraph", "text": "Fecha: 22 de septiembre de 2026"},
+    {"type": "paragraph", "text": "Repositorio: github.com/Benecanico1/sale-baile"},
+    {"type": "paragraph", "text": "Ruta local: C:\\Users\\enero\\sale-baile"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "Paso 1 — Abrir la terminal", "level": 1},
+    {"type": "paragraph", "text": "Abrir Git Bash (o la terminal que uses) y navegar a la carpeta del proyecto:"},
+    {"type": "paragraph", "text": "cd C:\\Users\\enero\\sale-baile"},
+
+    {"type": "heading", "text": "Paso 2 — Cargar las variables de entorno", "level": 1},
+    {"type": "paragraph", "text": "Antes de ejecutar cualquier bot, hay que cargar las API keys del archivo .env. Esto carga VITE_GEMINI_API_KEY, VITE_APIFY_TOKEN y las demas variables:"},
+    {"type": "paragraph", "text": "export $(grep -v '^#' .env | xargs)"},
+    {"type": "paragraph", "text": "IMPORTANTE: Sin este paso, los bots no tienen las API keys y no funcionan. Hay que hacerlo cada vez que se abre una terminal nueva."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "Paso 3 — Ejecutar el bot que quieras", "level": 1},
+    {"type": "paragraph", "text": "Cada bot hace una cosa distinta. Todos estan en la carpeta scripts/ del proyecto."},
+
+    {"type": "heading", "text": "1. Radar (agente_radar.py)", "level": 2},
+    {"type": "paragraph", "text": "Scrapea las 9 cuentas de Instagram ya monitoreadas, descarga los flyers, los analiza con Gemini Vision para extraer datos (titulo, fecha, lugar, precio, genero), geolocaliza con OpenStreetMap, valida los datos y publica los eventos en Firebase."},
+    {"type": "paragraph", "text": "Comando: python scripts/agente_radar.py"},
+    {"type": "paragraph", "text": "Escribe en: sale_baile/events.json en Firebase"},
+
+    {"type": "heading", "text": "2. Cazador (agente_cazador.py)", "level": 2},
+    {"type": "paragraph", "text": "Busca NUEVOS organizadores de eventos de baile que todavia no estan en Sale Baile. Escanea Instagram por hashtags (#bachata, #salsa, #tango, etc.), identifica las cuentas que publican flyers de eventos, las puntua de 0 a 100 segun su potencial y guarda los prospectos en Firebase como leads."},
+    {"type": "paragraph", "text": "Comando: python scripts/agente_cazador.py"},
+    {"type": "paragraph", "text": "Escribe en: sale_baile/leads.json en Firebase"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "3. Outreach (agente_outreach.py)", "level": 2},
+    {"type": "paragraph", "text": "Toma los leads generados por el Cazador y genera un mensaje de DM (Direct Message) personalizado para cada organizador con el tono de marca de Sale Baile. Con el flag --send envia los DMs reales por Instagram usando Apify."},
+    {"type": "paragraph", "text": "Comandos:"},
+    {"type": "paragraph", "text": "Solo generar (no envia nada): python scripts/agente_outreach.py"},
+    {"type": "paragraph", "text": "Generar y enviar DMs reales: python scripts/agente_outreach.py --send"},
+    {"type": "paragraph", "text": "Limitar a 3 leads para probar: python scripts/agente_outreach.py --send --limit 3"},
+    {"type": "paragraph", "text": "Escribe en: sale_baile/leads.json (status: contacted + dm_status)"},
+
+    {"type": "heading", "text": "4. Reportes Semanales (agente_reportes.py)", "level": 2},
+    {"type": "paragraph", "text": "Genera un reporte semanal por cada organizador con sus metricas en Sale Baile (eventos publicados, pendientes, destacados, views, clicks, favoritos, entradas vendidas) y sugerencias de mejora generadas con IA."},
+    {"type": "paragraph", "text": "Comando: python scripts/agente_reportes.py"},
+    {"type": "paragraph", "text": "Recomendado: ejecutar los lunes por la manana."},
+    {"type": "paragraph", "text": "Escribe en: sale_baile/weekly_reports.json en Firebase"},
+
+    {"type": "heading", "text": "5. Auto-Deteccion (agente_autodeteccion.py)", "level": 2},
+    {"type": "paragraph", "text": "Monitorea las cuentas de los organizadores ya registrados en Sale Baile, detecta cuando suben un nuevo flyer a Instagram, extrae los datos del evento con Gemini Vision y crea un borrador automatico en Firebase para que el organizador lo revise y publique con un solo clic."},
+    {"type": "paragraph", "text": "Comando: python scripts/agente_autodeteccion.py"},
+    {"type": "paragraph", "text": "Escribe en: sale_baile/auto_drafts.json en Firebase"},
+    {"type": "paragraph", "text": "Por defecto escanea las primeras 3 cuentas para no agotar el tiempo. Para escanear todas, modificar MAX_ACCOUNTS en el script."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "6. Contenido (agente_contenido.py)", "level": 2},
+    {"type": "paragraph", "text": "Genera contenido para redes sociales a partir de los eventos publicados en Sale Baile. Crea posts de Instagram, descripciones atractivas para la cartelera y campanas de marketing completas con copy, target, segmentacion y presupuesto sugerido. Aplica el manual de marca (colores, tipografias, tono)."},
+    {"type": "paragraph", "text": "Comandos:"},
+    {"type": "paragraph", "text": "Todo: python scripts/agente_contenido.py"},
+    {"type": "paragraph", "text": "Solo redes: python scripts/agente_contenido.py redes"},
+    {"type": "paragraph", "text": "Solo descripcion: python scripts/agente_contenido.py descripcion"},
+    {"type": "paragraph", "text": "Solo campana: python scripts/agente_contenido.py campana"},
+
+    {"type": "heading", "text": "7. Estratega (agente_estratega.py)", "level": 2},
+    {"type": "paragraph", "text": "Analiza el mercado de eventos de baile en Buenos Aires, la competencia, oportunidades de negocio y partnerships. Genera reportes estrategicos para guiar el crecimiento de Sale Baile."},
+    {"type": "paragraph", "text": "Comandos:"},
+    {"type": "paragraph", "text": "python scripts/agente_estratega.py competencia"},
+    {"type": "paragraph", "text": "python scripts/agente_estratega.py mercado"},
+    {"type": "paragraph", "text": "python scripts/agente_estratega.py oportunidades"},
+    {"type": "paragraph", "text": "python scripts/agente_estratega.py todos"},
+
+    {"type": "heading", "text": "8. Investigador (agente_investigador.py)", "level": 2},
+    {"type": "paragraph", "text": "Busca tecnologias, librerias y herramientas nuevas para mejorar los proyectos de Ingenieria JH. Investiga tendencias en IA, automatizacion, desarrollo web, mobile y Firebase."},
+    {"type": "paragraph", "text": "Comandos:"},
+    {"type": "paragraph", "text": "python scripts/agente_investigador.py ia"},
+    {"type": "paragraph", "text": "python scripts/agente_investigador.py web"},
+    {"type": "paragraph", "text": "python scripts/agente_investigador.py mobile"},
+    {"type": "paragraph", "text": "python scripts/agente_investigador.py firebase"},
+    {"type": "paragraph", "text": "python scripts/agente_investigador.py todos"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "9. Revisor (agente_revisor.py)", "level": 2},
+    {"type": "paragraph", "text": "Revisa el codigo de las aplicaciones buscando bugs, errores de seguridad, mejoras de performance y problemas de calidad. Lee los archivos del proyecto y los analiza con Gemini."},
+    {"type": "paragraph", "text": "Comandos:"},
+    {"type": "paragraph", "text": "python scripts/agente_revisor.py sale-baile"},
+    {"type": "paragraph", "text": "python scripts/agente_revisor.py quinela-master-pro"},
+    {"type": "paragraph", "text": "python scripts/agente_revisor.py todos"},
+
+    {"type": "heading", "text": "10. WhatsApp (agente_whatsapp.py)", "level": 2},
+    {"type": "paragraph", "text": "Bot de WhatsApp Cloud API de Meta. Los organizadores mandan una foto del flyer por WhatsApp y el bot extrae los datos con Gemini Vision, crea el evento en Firebase y responde con los detalles. Los bailarines consultan la cartelela por WhatsApp. REQUIERE configuracion extra de Meta Business."},
+    {"type": "paragraph", "text": "Comandos:"},
+    {"type": "paragraph", "text": "pip install flask  (solo la primera vez)"},
+    {"type": "paragraph", "text": "python scripts/agente_whatsapp.py"},
+    {"type": "paragraph", "text": "Necesita: WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, WHATSAPP_VERIFY_TOKEN en .env"},
+    {"type": "paragraph", "text": "Para configurar: ver .env.whatsapp.example en la raiz del proyecto"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "Pipeline Recomendado (flujo completo)", "level": 1},
+    {"type": "paragraph", "text": "Si queres correr todo el flujo de captacion de organizadores de punta a punta, ejecutar los bots en este orden:"},
+    {"type": "paragraph", "text": ""},
+    {"type": "paragraph", "text": "Paso 1: cd C:\\Users\\enero\\sale-baile"},
+    {"type": "paragraph", "text": "Paso 2: export $(grep -v '^#' .env | xargs)"},
+    {"type": "paragraph", "text": "Paso 3: python scripts/agente_cazador.py  (buscar organizadores nuevos)"},
+    {"type": "paragraph", "text": "Paso 4: python scripts/agente_outreach.py --send --limit 3  (enviar DMs por Instagram)"},
+    {"type": "paragraph", "text": "Paso 5: python scripts/agente_radar.py  (scrapear y publicar eventos de cuentas monitoreadas)"},
+    {"type": "paragraph", "text": "Paso 6: python scripts/agente_autodeteccion.py  (detectar flyers nuevos)"},
+    {"type": "paragraph", "text": "Paso 7: python scripts/agente_reportes.py  (reportes semanales, los lunes)"},
+    {"type": "paragraph", "text": "Paso 8: python scripts/agente_contenido.py redes  (generar posts de redes)"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "Resumen Rapido", "level": 1},
+    {"type": "table", "header": true, "rows": [
+      ["Bot", "Comando", "Para que sirve"],
+      ["Radar", "python scripts/agente_radar.py", "Scrapear Instagram y publicar eventos"],
+      ["Cazador", "python scripts/agente_cazador.py", "Buscar organizadores nuevos por hashtags"],
+      ["Outreach", "python scripts/agente_outreach.py --send", "Enviar DMs por Instagram a los leads"],
+      ["Reportes", "python scripts/agente_reportes.py", "Reportes semanales con metricas y sugerencias"],
+      ["Auto-Deteccion", "python scripts/agente_autodeteccion.py", "Detectar flyers nuevos y crear borradores"],
+      ["Contenido", "python scripts/agente_contenido.py", "Generar posts para redes sociales"],
+      ["Estratega", "python scripts/agente_estratega.py", "Analizar mercado y competencia"],
+      ["Investigador", "python scripts/agente_investigador.py", "Buscar tecnologias nuevas"],
+      ["Revisor", "python scripts/agente_revisor.py", "Revisar codigo del proyecto"],
+      ["WhatsApp", "python scripts/agente_whatsapp.py", "Bot de WhatsApp (necesita Meta Business)"]
+    ]},
+
+    {"type": "heading", "text": "Notas Importantes", "level": 1},
+    {"type": "paragraph", "text": "1. Siempre cargar el .env antes de ejecutar cualquier bot: export $(grep -v '^#' .env | xargs)"},
+    {"type": "paragraph", "text": "2. Sin las API keys, los bots no funcionan. Necesitan VITE_GEMINI_API_KEY y VITE_APIFY_TOKEN."},
+    {"type": "paragraph", "text": "3. Gemini 3.6 Flash puede dar error 429 (Too Many Requests) cuando se satura. Todos los bots tienen retry con backoff y plantillas de fallback."},
+    {"type": "paragraph", "text": "4. Apify Instagram Scraper tiene un costo por ejecucion. El Cazador usa 10 hashtags x 10 posts = ~100 posts por ejecucion."},
+    {"type": "paragraph", "text": "5. El archivo .env NO se sube a GitHub (esta en .gitignore). No compartir las API keys."},
+    {"type": "paragraph", "text": "6. Los bots escriben en Firebase RTDB: salebaile/events, salebaile/leads, sale_baile/weekly_reports, sale_baile/auto_drafts, sale_baile/whatsapp_logs."},
+    {"type": "paragraph", "text": "7. Para desplegar la app web: cd ~/sale-baile && npm run build && firebase deploy --only hosting"},
+    {"type": "paragraph", "text": "8. Para el bot de WhatsApp se necesita cuenta de Meta Business + numero de WhatsApp Business dedicado."}
+  ]
+}
