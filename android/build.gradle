@@ -22,6 +22,17 @@ allprojects {
         google()
         mavenCentral()
     }
+    // Usar el JDK 25 de Android Studio con compatibilidad Java 21
+    tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+    // Forzar toolchain a JDK 25
+    plugins.withId('java') {
+        extensions.configure(JavaToolchainSpec, { spec ->
+            spec.languageVersion = JavaLanguageVersion.of(25)
+        })
+    }
 }
 
 task clean(type: Delete) {

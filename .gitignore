@@ -37,3 +37,8 @@ dist/*.bin
 agente_radar_log.txt
 reporte_*.json
 .env
+
+# JDK y APKs sueltos (no pertenecen al repo)
+jdk21/
+jdk21.zip
+*.apk
