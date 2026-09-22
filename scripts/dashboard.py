@@ -323,9 +323,22 @@ def run_bot(bot_id):
 # ============================================================
 
 class DashboardHandler(BaseHTTPRequestHandler):
+    def _send_cors_headers(self):
+        """Envía headers CORS para permitir peticiones desde salebaile.web.app."""
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+    def do_OPTIONS(self):
+        """Responde a peticiones preflight OPTIONS de CORS."""
+        self.send_response(204)
+        self._send_cors_headers()
+        self.end_headers()
+
     def do_GET(self):
         if self.path == "/" or self.path == "/index.html":
             self.send_response(200)
+            self._send_cors_headers()
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(get_html().encode("utf-8"))
@@ -334,6 +347,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             bot_id = self.path.split("id=")[1].split("&")[0]
             output, error = run_bot(bot_id)
             self.send_response(200)
+            self._send_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             response = json.dumps({"output": output, "error": error})
@@ -341,12 +355,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
         elif self.path == "/api/bots":
             self.send_response(200)
+            self._send_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             self.wfile.write(json.dumps(BOTS).encode("utf-8"))
 
         else:
             self.send_response(404)
+            self._send_cors_headers()
             self.end_headers()
 
     def log_message(self, format, *args):
