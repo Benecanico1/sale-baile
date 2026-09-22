@@ -323,6 +323,8 @@ def run_bot(bot_id):
 # ============================================================
 
 class DashboardHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
     def _send_cors_headers(self):
         """Envía headers CORS para permitir peticiones desde salebaile.web.app."""
         self.send_header("Access-Control-Allow-Origin", "*")
