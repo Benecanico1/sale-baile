@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
+import { BotResults } from './BotResults';
 
 interface BotConfig {
   id: string;
@@ -256,6 +257,9 @@ export const BotsPanel: React.FC = () => {
           Todos los bots escriben en Firebase RTDB: salebaile.web.app → sale_baile/
         </p>
       </div>
+
+      {/* === RESULTADOS DE LOS BOTS === */}
+      <BotResults />
     </div>
   );
 };
