@@ -34,3 +34,5 @@ android/build
 public/*.bin
 dist/*.bin
 
+agente_radar_log.txt
+reporte_*.json

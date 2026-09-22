@@ -22,10 +22,10 @@ from datetime import datetime, timedelta
 # ============================================================
 
 # Apify (scraper de Instagram)
-APIFY_TOKEN = os.environ.get("VITE_APIFY_TOKEN", "")
+APIFY_TOKEN = os.environ.get("VITE_APIFY_TOKEN", os.environ.get("APIFY_TOKEN", ""))
 
 # Gemini Vision (IA de Google)
-GEMINI_API_KEY = os.environ.get("VITE_GEMINI_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("VITE_GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
 GEMINI_MODEL = "gemini-3.6-flash"
 GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
 

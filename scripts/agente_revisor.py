@@ -19,7 +19,7 @@ from datetime import datetime
 # CONFIGURACIÓN
 # ============================================================
 
-GEMINI_KEY = os.environ.get("VITE_GEMINI_API_KEY", "")
+GEMINI_KEY = os.environ.get("VITE_GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_KEY}"
 
 PROYECTOS = {
