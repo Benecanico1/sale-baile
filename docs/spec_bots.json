@@ -1,0 +1,290 @@
+{
+  "title": "Sale Baile - Documentacion de Bots y Agentes IA",
+  "author": "Ingenieria JH - Sale Baile",
+  "page_size": "A4",
+  "page_numbers": true,
+  "elements": [
+    {"type": "heading", "text": "Sale Baile - Bots y Agentes IA", "level": 1},
+    {"type": "paragraph", "text": "Documento tecnico de los 8 bots y agentes de inteligencia artificial que componen el ecosistema automatizado de Sale Baile (salebaile.web.app). Cada agente es un script Python que se ejecuta desde la terminal y opera sobre Firebase RTDB."},
+    {"type": "paragraph", "text": "Fecha de generacion: 22 de septiembre de 2026"},
+    {"type": "paragraph", "text": "Repositorio: github.com/Benecanico1/sale-baile"},
+    {"type": "paragraph", "text": "Ruta local: C:\\Users\\enero\\sale-baile"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "1. Ubicacion y Ejecucion", "level": 1},
+    {"type": "paragraph", "text": "Todos los bots son scripts Python ubicados en la carpeta scripts/ del proyecto Sale Baile. Se ejecutan desde la terminal con Python 3.10+ y necesitan las variables de entorno del archivo .env."},
+    {"type": "heading", "text": "1.1 Requisitos", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Variable", "Descripcion", "Uso"],
+      ["VITE_GEMINI_API_KEY", "API key de Google Gemini (Vision)", "Todos los agentes que usan IA"],
+      ["VITE_APIFY_TOKEN", "Token de Apify para scraper de Instagram", "agente_radar, agente_cazador, agente_autodeteccion"],
+      ["VITE_GOOGLE_CLIENT_ID", "OAuth de Google para login", "App web (no bots)"]
+    ]},
+    {"type": "heading", "text": "1.2 Como ejecutar los bots", "level": 2},
+    {"type": "paragraph", "text": "Antes de ejecutar cualquier bot, cargar las variables de entorno desde el archivo .env:"},
+    {"type": "paragraph", "text": "cd C:\\Users\\enero\\sale-baile"},
+    {"type": "paragraph", "text": "Linux/Mac: export $(grep -v '^#' .env | xargs)"},
+    {"type": "paragraph", "text": "Windows (git-bash): export $(grep -v '^#' .env | xargs) && python scripts/agente_NOMBRE.py"},
+    {"type": "paragraph", "text": "Los scripts se ejecutan desde la raiz del proyecto (no desde dentro de scripts/) para que las rutas relativas funcionen correctamente."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "1.3 Estructura de Firebase", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Ruta en Firebase", "Contenido", "Agente que escribe"],
+      ["sale_baile/events.json", "Eventos publicados y pendientes", "agente_radar"],
+      ["sale_baile/leads.json", "Prospectos de organizadores con score", "agente_cazador, agente_outreach"],
+      ["sale_baile/weekly_reports.json", "Reportes semanales por organizador", "agente_reportes"],
+      ["sale_baile/auto_drafts.json", "Borradores auto-detectados de Instagram", "agente_autodeteccion"]
+    ]},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "2. Agente Radar (agente_radar.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Scrapea las cuentas de Instagram de los organizadores ya monitoreados (9 cuentas), descarga los flyers, los analiza con Gemini Vision para extraer datos (titulo, fecha, lugar, precio, genero), geolocaliza con OpenStreetMap, valida los datos y carga los eventos en Firebase."},
+    {"type": "heading", "text": "2.1 Pipeline", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Paso", "Accion", "Herramienta"],
+      ["1", "Scrapear posts de Instagram", "Apify Instagram Scraper"],
+      ["2", "Descargar imagen del flyer", "urllib + proxies CORS"],
+      ["3", "Extraer datos del flyer con Vision", "Gemini 3.6 Flash Vision"],
+      ["4", "Geolocalizar direccion", "OpenStreetMap Nominatim"],
+      ["5", "Validar datos obligatorios", "Heuristica (titulo, direccion, precio, fecha)"],
+      ["6", "Guardar evento en Firebase", "Firebase RTDB PUT events.json"]
+    ]},
+    {"type": "heading", "text": "2.2 Cuentas monitoreadas (9)", "level": 2},
+    {"type": "table", "header": false, "rows": [
+      ["@melanybys", "@bailamosacademia", "@chambeasalsaybachata"],
+      ["@saborlatino.ok", "@lasalseracom", "@jorge_solohaga"],
+      ["@salsaarriba", "@lavirubachatera", "@ceresitobi"]
+    ]},
+    {"type": "heading", "text": "2.3 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_radar.py"},
+    {"type": "paragraph", "text": "Este agente carga los eventos directamente en sale_baile/events.json con status 'publicado' (si confidence >= 50) o 'pendiente' (si faltan datos)."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "3. Agente Cazador (agente_cazador.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Busca NUEVOS organizadores de eventos de baile que todavia no estan en Sale Baile. Escanea Instagram por hashtags de baile (#bachata, #salsa, #tango, etc.), identifica las cuentas que publican flyers de eventos, las puntua de 0 a 100 segun su potencial y guarda los prospectos en Firebase como leads."},
+    {"type": "heading", "text": "3.1 Pipeline", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Paso", "Accion", "Detalle"],
+      ["1", "Buscar posts por hashtags", "10 hashtags (#bachata #salsa #tango #milongacaramban...)"],
+      ["2", "Filtrar posts que parecen flyers", "Heuristica: caption + imagen + palabras clave"],
+      ["3", "Agrupar por autor", "Cuentas unicas, filtrando las 9 ya monitoreadas"],
+      ["4", "Analizar con Gemini (batch)", "Clasifica estilo, tipo, ubicacion de cada cuenta"],
+      ["5", "Puntuar (0-100)", "Engagement, frecuencia, hashtags, ubicacion"],
+      ["6", "Guardar leads en Firebase", "sale_baile/leads con status 'new'"]
+    ]},
+    {"type": "heading", "text": "3.2 Sistema de Scoring (0-100)", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Criterio", "Puntos", "Condicion"],
+      ["Frecuencia de eventos", "10-25", "Mas eventos detectados = mas puntos"],
+      ["Engagement (likes prom)", "5-20", "Mas likes por post = mas puntos"],
+      ["Comentarios", "5-10", "Mas comentarios = mas puntos"],
+      ["Gemini confirma organizador", "+15 / -10", "Confirmacion o penalizacion"],
+      ["Estilo de baile detectado", "0-10", "Bachata, salsa, tango, etc."],
+      ["Ubicacion BA/Argentina", "5-10", "Mencion de Buenos Aires o Argentina"],
+      ["Caption menciona BA", "5-10", "Palabras clave en el texto del post"],
+      ["Hashtags de baile", "0-10", "Cantidad de hashtags relevantes"]
+    ]},
+    {"type": "heading", "text": "3.3 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_cazador.py"},
+    {"type": "paragraph", "text": "Resultado: 15 leads guardados en Firebase con scores entre 20 y 70."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "4. Agente Outreach (agente_outreach.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Toma los leads generados por el Cazador (status 'new' en Firebase) y genera un mensaje de DM (Direct Message) personalizado para cada organizador. Usa Gemini para redactar el mensaje o, si Gemini esta saturado (error 429), usa una plantilla inteligente que infiere el estilo de baile del handle y el caption del post."},
+    {"type": "heading", "text": "4.1 Pipeline", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Paso", "Accion", "Detalle"],
+      ["1", "Leer leads con status 'new'", "Firebase: sale_baile/leads.json"],
+      ["2", "Generar DM con Gemini", "Prompt: tono argentino, <280 chars, llamada a accion"],
+      ["3", "Fallback: plantilla inteligente", "infer_dance_style() detecta estilo del handle"],
+      ["4", "Validar longitud (<280 chars)", "Truncar si excede el limite de DM de Instagram"],
+      ["5", "Guardar mensaje en Firebase", "Campo outreach_message + status 'contacted'"]
+    ]},
+    {"type": "heading", "text": "4.2 Inferencia de estilo de baile", "level": 2},
+    {"type": "paragraph", "text": "Si Gemini no esta disponible, la funcion infer_dance_style() analiza el handle y el caption del post para detectar el estilo: bachata, salsa, tango, kizomba, sensual, merengue, cumbia, rock. Busca palabras clave en el nombre de la cuenta y en los hashtags del caption."},
+    {"type": "heading", "text": "4.3 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_outreach.py"},
+    {"type": "paragraph", "text": "Los mensajes quedan guardados en Firebase listos para envio manual desde Instagram."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "5. Agente Reportes Semanales (agente_reportes.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Genera un reporte semanal por cada organizador con sus metricas en Sale Baile (eventos publicados, pendientes, destacados, views, clicks, favoritos, entradas vendidas) y sugerencias de mejora generadas con IA. Guarda los reportes en Firebase para que la app pueda mostrarlos al organizador."},
+    {"type": "heading", "text": "5.1 Pipeline", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Paso", "Accion", "Detalle"],
+      ["1", "Cargar eventos de Firebase", "sale_baile/events.json"],
+      ["2", "Cargar leads de Firebase", "sale_baile/leads.json (para score del organizador)"],
+      ["3", "Agrupar por organizador", "organizer_instagram u organizer_name"],
+      ["4", "Computar estadisticas", "Eventos, publicados, pendientes, generos, ciudades, engagement"],
+      ["5", "Generar sugerencias con Gemini", "3 sugerencias accionables (fallback sin IA)"],
+      ["6", "Guardar reporte en Firebase", "sale_baile/weekly_reports/{organizador}.json"]
+    ]},
+    {"type": "heading", "text": "5.2 Metricas incluidas", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Metrica", "Descripcion"],
+      ["total_events", "Cantidad total de eventos del organizador"],
+      ["published", "Eventos con status 'publicado'"],
+      ["pending", "Eventos con status 'pendiente'"],
+      ["featured", "Eventos destacados (is_featured)"],
+      ["future_events", "Eventos con fecha posterior a hoy"],
+      ["genres", "Distribucion de generos (bachata, salsa, etc.)"],
+      ["total_views", "Vistas totales de todos los eventos"],
+      ["total_clicks", "Clicks totales"],
+      ["total_favorites", "Favoritos totales"],
+      ["total_tickets_sold", "Entradas vendidas totales"]
+    ]},
+    {"type": "heading", "text": "5.3 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_reportes.py"},
+    {"type": "paragraph", "text": "Recomendado: ejecutar cada lunes por la manana para generar el reporte de la semana anterior."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "6. Agente Auto-Deteccion (agente_autodeteccion.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Monitorea las cuentas de los organizadores ya registrados en Sale Baile, detecta cuando suben un nuevo flyer a Instagram, extrae los datos del evento con Gemini Vision y crea un borrador automatico en Firebase para que el organizador lo revise y publique con un solo clic. Genera un mensaje de notificacion para enviarle por DM."},
+    {"type": "heading", "text": "6.1 Pipeline", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Paso", "Accion", "Detalle"],
+      ["1", "Cargar borradores y eventos existentes", "Para no duplicar posts ya procesados"],
+      ["2", "Scrapear posts de cuentas monitoreadas", "Apify: ultimos 2 posts de cada cuenta"],
+      ["3", "Filtrar duplicados", "Comparar URLs con events y auto_drafts"],
+      ["4", "Filtrar flyers de evento", "Heuristica: is_flyer_post() con keywords"],
+      ["5", "Descargar imagen del flyer", "urllib + proxies CORS"],
+      ["6", "Extraer datos con Gemini Vision", "Titulo, fecha, lugar, precio, genero, DJ, clase, social"],
+      ["7", "Crear borrador en Firebase", "sale_baile/auto_drafts con status 'pending'"],
+      ["8", "Generar mensaje de notificacion", "DM para el organizador"]
+    ]},
+    {"type": "heading", "text": "6.2 Diferencia con el Agente Radar", "level": 2},
+    {"type": "paragraph", "text": "El Agente Radar carga eventos directamente en events.json (publicados o pendientes). El Agente Auto-Deteccion crea borradores en auto_drafts para que el organizador los revise y confirme antes de publicar. Esto evita publicar eventos con datos incompletos o erroneos y le da control al organizador."},
+    {"type": "heading", "text": "6.3 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_autodeteccion.py"},
+    {"type": "paragraph", "text": "Por defecto escanea las primeras 3 cuentas para no agotar el tiempo de ejecucion. Para escanear todas, modificar MAX_ACCOUNTS en el script."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "7. Agente Contenido (agente_contenido.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Genera contenido para redes sociales a partir de los eventos publicados en Sale Baile. Crea posts de Instagram, descripciones atractivas para la cartelera y campañas de marketing completas con copy, target, segmentacion y presupuesto sugerido."},
+    {"type": "heading", "text": "7.1 Tipos de contenido", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Tipo", "Salida", "Descripcion"],
+      ["redes", "3 posts de Instagram", "Con hashtags, emojis y llamado a la accion"],
+      ["descripcion", "Descripcion de evento", "Texto atractivo para la cartelera de Sale Baile"],
+      ["campana", "Campana completa", "Copy, target, segmentacion, presupuesto sugerido"]
+    ]},
+    {"type": "heading", "text": "7.2 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_contenido.py [tipo] [evento]"},
+    {"type": "paragraph", "text": "tipo: redes | descripcion | campana | todos (default: todos)"},
+    {"type": "paragraph", "text": "evento: nombre del evento o 'auto' para usar eventos de Firebase"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "8. Agente Estratega (agente_estratega.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Analiza el mercado de eventos de baile en Buenos Aires, la competencia, oportunidades de negocio y partnerships. Genera reportes estrategicos para guiar el crecimiento de Sale Baile."},
+    {"type": "heading", "text": "8.1 Tipos de analisis", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Tipo", "Analisis", "Detalle"],
+      ["competencia", "Competidores", "Directos e indirectos, features, diferenciacion"],
+      ["mercado", "Tamano de mercado", "Estacionalidad, precios, segmentos, tendencias"],
+      ["oportunidades", "Oportunidades", "Partnerships, nichos sin explotar, features nuevas"]
+    ]},
+    {"type": "heading", "text": "8.2 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_estratega.py [tipo]"},
+    {"type": "paragraph", "text": "tipo: competencia | mercado | oportunidades | todos (default: todos)"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "9. Agente Investigador (agente_investigador.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Busca tecnologias, librerias y herramientas nuevas para mejorar los proyectos de Ingenieria JH. Investiga tendencias en IA, automatizacion, desarrollo web, mobile y Firebase."},
+    {"type": "heading", "text": "9.1 Temas de investigacion", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Tema", "Area", "Detalle"],
+      ["ia", "Inteligencia Artificial", "ML, automatizacion, APIs de Vision, scraping"],
+      ["web", "Desarrollo web", "React, Vite, TypeScript, Tailwind, performance"],
+      ["mobile", "Desarrollo mobile", "Capacitor, PWA, Android, React Native"],
+      ["firebase", "Backend-as-a-Service", "Firebase, Supabase, alternativas"]
+    ]},
+    {"type": "heading", "text": "9.2 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_investigador.py [tema]"},
+    {"type": "paragraph", "text": "tema: ia | web | mobile | firebase | todos (default: todos)"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "10. Agente Revisor (agente_revisor.py)", "level": 1},
+    {"type": "paragraph", "text": "Funcion: Revisa el codigo de las aplicaciones buscando bugs, errores de seguridad, mejoras de performance y problemas de calidad. Lee los archivos del proyecto y los analiza con Gemini."},
+    {"type": "heading", "text": "10.1 Que revisa", "level": 2},
+    {"type": "table", "header": true, "rows": [
+      ["Area", "Detalle"],
+      ["Bugs", "Errores logicos, edge cases, null references"],
+      ["Seguridad", "API keys expuestas, XSS, injection, CORS"],
+      ["Performance", "Re-render innecesario, queries ineficientes"],
+      ["Calidad", "Codigo duplicado, naming, tipado TypeScript"]
+    ]},
+    {"type": "heading", "text": "10.2 Como ejecutarlo", "level": 2},
+    {"type": "paragraph", "text": "python scripts/agente_revisor.py [proyecto]"},
+    {"type": "paragraph", "text": "proyecto: sale-baile | quinela-master-pro | todos (default: todos)"},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "11. Resumen del Ecosistema", "level": 1},
+    {"type": "paragraph", "text": "Los 8 agentes forman un ecosistema completo de automatizacion para Sale Baile:"},
+    {"type": "table", "header": true, "rows": [
+      ["Agente", "Funcion principal", "Escribe en Firebase"],
+      ["agente_radar.py", "Scrapear Instagram y publicar eventos", "events.json"],
+      ["agente_cazador.py", "Buscar nuevos organizadores por hashtags", "leads.json"],
+      ["agente_outreach.py", "Generar DMs personalizados para leads", "leads.json (status: contacted)"],
+      ["agente_reportes.py", "Reportes semanales con metricas y sugerencias", "weekly_reports.json"],
+      ["agente_autodeteccion.py", "Detectar flyers nuevos y crear borradores", "auto_drafts.json"],
+      ["agente_contenido.py", "Generar contenido para redes sociales", "(no escribe en Firebase)"],
+      ["agente_estratega.py", "Analizar mercado y competencia", "(no escribe en Firebase)"],
+      ["agente_revisor.py", "Revisar codigo del proyecto", "(no escribe en Firebase)"]
+    ]},
+
+    {"type": "heading", "text": "11.1 Pipeline recomendado", "level": 2},
+    {"type": "paragraph", "text": "Flujo de captacion de organizadores:"},
+    {"type": "paragraph", "text": "1. agente_cazador.py -> Busca prospectos por hashtags y los puntua (sale_baile/leads, status: new)"},
+    {"type": "paragraph", "text": "2. agente_outreach.py -> Genera DMs personalizados y marca como contacted (sale_baile/leads, status: contacted)"},
+    {"type": "paragraph", "text": "3. Envio manual de DMs desde Instagram al organizador"},
+    {"type": "paragraph", "text": "4. El organizador se registra en Sale Baile y empieza a publicar eventos"},
+    {"type": "paragraph", "text": "5. agente_autodeteccion.py -> Detecta sus nuevos flyers y crea borradores automaticos"},
+    {"type": "paragraph", "text": "6. agente_reportes.py -> Cada lunes genera reporte con metricas y sugerencias"},
+    {"type": "paragraph", "text": "7. agente_radar.py -> Scrapea y publica eventos de las cuentas monitoreadas"},
+    {"type": "paragraph", "text": "8. agente_contenido.py -> Genera posts de redes para promocionar los eventos"},
+
+    {"type": "heading", "text": "11.2 Notas tecnicas", "level": 2},
+    {"type": "paragraph", "text": "- Gemini 3.6 Flash puede devolver error 429 (Too Many Requests) cuando se satura. Todos los agentes tienen retry con backoff y plantillas de fallback."},
+    {"type": "paragraph", "text": "- Apify Instagram Scraper tiene un costo por ejecucion. El Cazador usa 10 hashtags x 10 posts = ~100 posts por ejecucion."},
+    {"type": "paragraph", "text": "- Los agentes que usan Gemini Vision (radar, autodeteccion) necesitan que la imagen del flyer se descargue primero, porque las URLs de Instagram CDN expiran."},
+    {"type": "paragraph", "text": "- Las API keys van en el archivo .env y NO se suben a GitHub (esta en .gitignore)."},
+
+    {"type": "pagebreak"},
+
+    {"type": "heading", "text": "12. Stack Tecnologico", "level": 1},
+    {"type": "table", "header": true, "rows": [
+      ["Componente", "Tecnologia", "Version"],
+      ["Frontend", "React + Vite + TypeScript", "Vite 8.3"],
+      ["CSS", "Tailwind CSS", "-"],
+      ["Backend", "Firebase Realtime Database", "-"],
+      ["Hosting", "Firebase Hosting", "2 sites: salebaile + hoy-bailamos-app"],
+      ["IA Vision", "Google Gemini 3.6 Flash", "gemini-3.6-flash"],
+      ["Scraper Instagram", "Apify Instagram Scraper", "apify~instagram-scraper"],
+      ["Geocoding", "OpenStreetMap Nominatim", "-"],
+      ["Mapas", "Leaflet + Mapbox", "-"],
+      ["Pagos", "MercadoPago", "-"],
+      ["Auth", "Google OAuth + Firebase Auth", "-"],
+      ["Mobile", "Capacitor (APK Android v1.2.0)", "-"],
+      ["Bots", "Python 3.10+ (stdlib urllib)", "8 scripts en scripts/"]
+    ]},
+
+    {"type": "heading", "text": "Contacto", "level": 1},
+    {"type": "paragraph", "text": "Ingenieria JH - Jesus Hidalgo"},
+    {"type": "paragraph", "text": "GitHub: github.com/Benecanico1/sale-baile"},
+    {"type": "paragraph", "text": "Web: salebaile.web.app | hoy-bailamos-app.web.app"},
+    {"type": "paragraph", "text": "Documento generado el 22 de septiembre de 2026"}
+  ]
+}
