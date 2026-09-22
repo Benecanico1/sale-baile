@@ -63,6 +63,7 @@ import { RadarBotInbox } from './RadarBotInbox';
 import { AdminEditEventModal } from './AdminEditEventModal';
 import { EventForm } from '../organizer/EventForm';
 import { EditProfileModal } from '../account/EditProfileModal';
+import { BotsPanel } from './BotsPanel';
 
 interface AdminDashboardProps {
   events: EventItem[];
@@ -92,7 +93,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onRefreshAll,
 }) => {
   const { usersList, approveOrganizer, rejectOrganizer, registerOrganizerDirectly, setUserRole, updateUserById, deleteUser, syncFromCloud } = useAuth();
-  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'reports' | 'all' | 'tickets' | 'radar' | 'devices'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'reports' | 'all' | 'tickets' | 'radar' | 'devices' | 'bots'>('pending');
   const [userFilter, setUserFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [eventFilter, setEventFilter] = useState<'all' | 'featured' | 'standard'>('all');
   const [deviceFilter, setDeviceFilter] = useState<'all' | 'installed' | 'android' | 'ios' | 'desktop'>('all');
@@ -622,7 +623,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {/* Menú de Navegación de Control Maestro (En Grilla Responsiva) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-2.5 sm:gap-3">
         {/* Menú 1: Solicitudes Pendientes */}
         <button
           onClick={() => setActiveTab('pending')}
@@ -826,6 +827,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="text-xs sm:text-sm font-extrabold truncate">🚩 Denuncias</div>
             <div className="text-[10px] text-slate-400 truncate">
               {activeReports.length === 0 ? 'Comunidad al día' : 'Reportes por revisar'}
+            </div>
+          </div>
+        </button>
+
+        {/* Menú 8: Bots IA */}
+        <button
+          onClick={() => setActiveTab('bots')}
+          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+            activeTab === 'bots'
+              ? 'bg-dance-crimson/30 text-white font-black border-dance-crimson ring-2 ring-dance-crimson/40 shadow-lg'
+              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-dance-crimson/50 hover:bg-dark-850'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+              activeTab === 'bots' ? 'bg-slate-950 text-dance-crimson' : 'bg-dance-crimson/20 text-dance-crimson'
+            }`}>
+              <Bot className="w-4 h-4" />
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+              activeTab === 'bots'
+                ? 'bg-slate-950 text-dance-crimson'
+                : 'bg-dance-crimson/20 text-dance-crimson border border-dance-crimson/40'
+            }`}>
+              10 bots
+            </span>
+          </div>
+          <div className="mt-2.5">
+            <div className="text-xs sm:text-sm font-extrabold truncate">🤖 Bots IA</div>
+            <div className={`text-[10px] truncate ${activeTab === 'bots' ? 'text-dance-crimson/80 font-bold' : 'text-slate-400'}`}>
+              Cazador, Outreach, Radar
             </div>
           </div>
         </button>
@@ -1772,6 +1804,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {/* Tab: Bots IA — Panel de Control de Agentes */}
+      {activeTab === 'bots' && (
+        <BotsPanel />
       )}
 
       {/* Tab: Todos los eventos */}
