@@ -343,10 +343,18 @@ def run(send_mode=False, max_leads=None):
             time.sleep(3)  # Rate limiting entre envíos
 
         # Guardar mensaje + actualizar status
+        if send_mode:
+            new_status = "contacted" if dm_status == "enviado" else "new"
+            last_contacted = datetime.now().isoformat() if dm_status == "enviado" else None
+        else:
+            # Modo generación: NO marcar como contacted, solo guardar el DM
+            new_status = "new"
+            last_contacted = None
+
         updates = {
             "outreach_message": message,
-            "status": "contacted" if not send_mode else ("contacted" if dm_status == "enviado" else "new"),
-            "last_contacted_at": datetime.now().isoformat() if dm_status == "enviado" else None,
+            "status": new_status,
+            "last_contacted_at": last_contacted,
             "message_length": len(message),
             "dm_status": dm_status,
         }
