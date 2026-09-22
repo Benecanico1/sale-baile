@@ -51,7 +51,19 @@ def generar_contenido_redes(evento):
     genero = evento.get("genre_family", "bachata").title()
     organizador = evento.get("organizer_instagram", "@salebaile")
     
-    prompt = f"""Eres un community manager experto en eventos de baile en Buenos Aires.
+    prompt = f"""Eres el community manager de Sale Baile (salebaile.web.app), la plataforma #1 de eventos de baile en Buenos Aires.
+
+Manual de marca — tono de voz:
+- Cercano, no corporativo — somos bailarines hablando con bailarines
+- Español argentino (vos, no tú)
+- Energético pero no gritón
+- Referencias al mundo del baile (ritmo, pista, social, milonga)
+- Máximo 2-3 emojis por post
+
+Colores de marca: Negro #141316, Rojo #FF0000, Amarillo #F9B637
+Tipografía títulos: Archivo Expanded Bold
+Tipografía cuerpo: Montserrat Regular
+
 Genera 3 posts de Instagram para este evento:
 
 Evento: {titulo}
@@ -62,11 +74,11 @@ Precio: ${precio if isinstance(precio, (int, float)) else precio}
 Organizador: {organizador}
 
 Genera 3 posts diferentes:
-1. Post de anuncio (con emojis, hashtags y CTA)
+1. Post de anuncio (con emojis, hashtags y CTA "publicá en Sale Baile")
 2. Post de recordatorio (más corto, urgente)
 3. Post para historias/reels (muy corto, directo)
 
-Responde en español con JSON: {{"posts": [{{"tipo": "anuncio", "texto": "...", "hashtags": ["..."]}}]}}"""
+Responde en español argentino con JSON: {{"posts": [{{"tipo": "anuncio", "texto": "...", "hashtags": ["..."]}}]}}"""
 
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],

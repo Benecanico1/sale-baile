@@ -86,7 +86,15 @@ def generate_dm_message(lead):
     sample_caption = lead.get("sample_caption", "")
     gemini_reasoning = lead.get("gemini_reasoning", "")
 
-    prompt = f"""Eres un community manager de Sale Baile (salebaile.web.app), la plataforma #1 de eventos de baile en Buenos Aires.
+    prompt = f"""Eres el community manager de Sale Baile (salebaile.web.app), la plataforma #1 de eventos de baile en Buenos Aires.
+
+Tono de voz de la marca:
+- Cercano, no corporativo — somos bailarines hablando con bailarines
+- Español argentino (vos, no tú)
+- Energético pero no gritón
+- Referencias al mundo del baile (ritmo, pista, social)
+- Máximo 2 emojis por mensaje
+
 Escribe un mensaje de DM de Instagram corto, amigable y directo para invitar a este organizador a publicar sus eventos en Sale Baile.
 
 Datos del organizador:
@@ -100,13 +108,12 @@ Datos del organizador:
 
 Reglas:
 1. Máximo 280 caracteres (límite de DM de Instagram)
-2. Tono cercano, no corporativo — somos bailarines hablando con bailarines
-3. Mencionar algo específico de su cuenta (estilo, cantidad de eventos, ubicación)
-4. Incluir llamada a acción clara: "publicá tus eventos en Sale Baile" o similar
-5. Mencionar que es gratis
-6. NO usar emojis excesivos (máximo 2)
-7. NO parecer spam ni bot — sonar humano
-8. En español argentino (vos, no tú)
+2. Mencionar algo específico de su cuenta (estilo, cantidad de eventos, ubicación)
+3. Incluir llamada a acción clara: "publicá tus eventos en Sale Baile" o similar
+4. Mencionar que es gratis
+5. NO usar emojis excesivos (máximo 2)
+6. NO parecer spam ni bot — sonar humano
+7. En español argentino (vos, no tú)
 
 Escribe SOLO el mensaje, sin comillas ni explicaciones."""
 
