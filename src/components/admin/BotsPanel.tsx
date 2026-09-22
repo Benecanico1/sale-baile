@@ -14,7 +14,6 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
 import { BotResults } from './BotResults';
@@ -105,9 +104,9 @@ export const BotsPanel: React.FC = () => {
       if (err.name === 'AbortError') {
         setOutput('⏱️ Timeout: el bot tardó demasiado. Puede seguir corriendo en el servidor.\n\nPara bots que scrapean Instagram (Radar, Cazador, Auto-Detección), puede tardar varios minutos.');
       } else {
-        setOutput(`❌ Error de conexión: No se pudo conectar al servidor local.\n\nPara ejecutar los bots necesitás tener el dashboard corriendo:\n\n1. Abrir una terminal\n2. cd C:\\Users\\enero\\sale-baile\n3. python scripts/dashboard.py\n4. Volver acá y hacer clic en el bot de nuevo\n\nO usar el menú: sale-baile-bots.bat`);
+        setOutput(`ℹ️ Ejecución manual no disponible desde el navegador\n\nLos bots ya corren automáticamente en la VPS (24/7):\n• Cazador: cada día a las 3 AM\n• Radar: cada día a las 6 AM\n• Auto-Detección: cada 6 horas\n• Reportes: cada lunes a las 9 AM\n\nPara ejecución manual, usá el acceso directo en tu PC:\n  doble clic en sale-baile-bots.bat\n\nLos resultados aparecen abajo en "Resultados de los Bots".`);
       }
-      setHasError(true);
+      setHasError(false);
     }
 
     setRunningBot(null);
@@ -152,15 +151,22 @@ export const BotsPanel: React.FC = () => {
 
         {/* Aviso si el servidor está offline */}
         {serverStatus === 'offline' && (
-          <div className="mt-4 p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-xs text-amber-200 flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="mt-4 p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-xs text-emerald-200 flex items-start gap-2.5">
+            <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <div className="space-y-1.5">
-              <p className="font-bold text-amber-300">El dashboard local no está corriendo</p>
-              <p className="text-amber-200/80">Para ejecutar los bots desde acá, abrí una terminal y ejecutá:</p>
-              <code className="block bg-dark-900 px-3 py-2 rounded-lg text-amber-100 font-mono text-[11px]">
-                cd C:\Users\enero\sale-baile{'\n'}python scripts/dashboard.py
-              </code>
-              <p className="text-amber-200/60 mt-1">O usá el acceso directo: <strong className="text-amber-200">sale-baile-bots.bat</strong> (doble clic)</p>
+              <p className="font-bold text-emerald-300">✅ Los bots ya corren automáticamente en la VPS (24/7)</p>
+              <p className="text-emerald-200/80">
+                No necesitás hacer nada manual — los bots se ejecutan solos:<br/>
+                • 🎯 Cazador: cada día a las 3 AM<br/>
+                • 📊 Radar: cada día a las 6 AM<br/>
+                • 🔍 Auto-Detección: cada 6 horas<br/>
+                • 📄 Reportes: cada lunes a las 9 AM<br/>
+                Los resultados aparecen abajo en "Resultados de los Bots" (se auto-actualiza cada 30s).
+              </p>
+              <p className="text-emerald-200/60 mt-1.5">
+                Los botones de ejecución manual están disponibles cuando el dashboard local está corriendo (opcional).<br/>
+                Para ejecución manual: <strong className="text-emerald-200">doble clic en sale-baile-bots.bat</strong>
+              </p>
             </div>
           </div>
         )}
