@@ -335,37 +335,47 @@ class DashboardHandler(BaseHTTPRequestHandler):
         """Responde a peticiones preflight OPTIONS de CORS."""
         self.send_response(204)
         self._send_cors_headers()
+        self.send_header("Content-Length", "0")
         self.end_headers()
 
     def do_GET(self):
         if self.path == "/" or self.path == "/index.html":
+            body = get_html().encode("utf-8")
             self.send_response(200)
             self._send_cors_headers()
             self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(get_html().encode("utf-8"))
+            self.wfile.write(body)
 
         elif self.path.startswith("/run?id="):
             bot_id = self.path.split("id=")[1].split("&")[0]
             output, error = run_bot(bot_id)
+            body = json.dumps({"output": output, "error": error}).encode("utf-8")
             self.send_response(200)
             self._send_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            response = json.dumps({"output": output, "error": error})
-            self.wfile.write(response.encode("utf-8"))
+            self.wfile.write(body)
 
         elif self.path == "/api/bots":
+            body = json.dumps(BOTS).encode("utf-8")
             self.send_response(200)
             self._send_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(json.dumps(BOTS).encode("utf-8"))
+            self.wfile.write(body)
 
         else:
+            body = b'{"error": "not found"}'
             self.send_response(404)
             self._send_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
+            self.wfile.write(body)
 
     def log_message(self, format, *args):
         pass  # Silenciar logs del servidor
