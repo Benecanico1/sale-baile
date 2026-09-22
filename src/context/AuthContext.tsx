@@ -253,14 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   });
 
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_AUTH_USER);
-      return !saved; // Solicita registro / login al abrir si no ha iniciado sesión
-    } catch (e) {
-      return true;
-    }
-  });
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | 'organizer'>('register');
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
 
