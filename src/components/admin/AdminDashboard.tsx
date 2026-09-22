@@ -337,530 +337,168 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 pb-28 space-y-6">
-      {/* Header Principal de Control */}
-      <div className="bg-gradient-to-br from-dark-900 via-[#131722] to-dark-950 p-5 sm:p-6 rounded-3xl border border-dark-750 shadow-2xl space-y-5">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-3 py-1 rounded-full bg-dance-gold/20 text-dance-gold text-[11px] font-black border border-dance-gold/40 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                <Shield className="w-3.5 h-3.5" />
-                Panel de Moderación y Control Maestro
-              </span>
-              {totalPendingActions > 0 && (
-                <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-black border border-amber-500/40 animate-pulse flex items-center gap-1">
-                  🔥 {totalPendingActions} Tareas Pendientes
-                </span>
-              )}
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 pb-28 space-y-5">
+      {/* Header minimalista */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 px-1">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-zinc-300">
+              <Shield className="w-4 h-4" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white mt-2 flex items-center gap-2">
-              <span>Centro de Control Administrativo</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1">
-              Gestión centralizada de organizadores, eventos en cartelera, emisión de entradas y verificación de transferencias.
-            </p>
-          </div>
-
-          {/* Botones de Acción Rápida */}
-          <div className="flex items-center gap-2.5 w-full lg:w-auto flex-wrap">
-            {onCreateEvent && (
-              <button
-                onClick={() => setIsCreateEventModalOpen(true)}
-                className="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-dance-crimson via-dance-coral to-dance-amber hover:opacity-95 text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-dance-crimson/20 transition-all active:scale-95 cursor-pointer"
-                title="Publicar un nuevo evento directamente como Administrador"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>+ Publicar Evento</span>
-              </button>
+            <h1 className="text-lg font-bold text-zinc-100">Centro de Control</h1>
+            {totalPendingActions > 0 && (
+              <span className="px-2 py-0.5 rounded-md bg-zinc-800/60 text-zinc-400 text-[10px] font-medium border border-zinc-700/40">
+                {totalPendingActions} pendientes
+              </span>
             )}
-
-            <button
-              onClick={() => setIsManualSaleModalOpen(true)}
-              className="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:opacity-95 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer"
-              title="Cargar venta concretada por WhatsApp y emitir entrada con QR"
-            >
-              <MessageCircle className="w-4 h-4 fill-slate-950" />
-              <span>+ Cargar Venta WhatsApp</span>
-            </button>
-
-            <button
-              onClick={() => setIsAddOrgModalOpen(true)}
-              className="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-dance-coral to-rose-600 hover:opacity-95 text-white font-black text-xs flex items-center gap-2 shadow-lg transition-all active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Habilitar Organizador</span>
-            </button>
-
-            <button
-              onClick={handleManualSync}
-              disabled={isSyncing}
-              className="px-4 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-600 hover:opacity-95 text-white text-xs font-black rounded-2xl shadow-lg flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
-              title="Sincronizar y forzar la recarga en tiempo real"
-            >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Sincronizando...' : '🔄 Actualizar Solicitudes'}</span>
-            </button>
           </div>
+          <p className="text-[11px] text-zinc-500 ml-10">Gestión de organizadores, eventos, entradas y pagos</p>
         </div>
 
-        {/* Dashboard de Métricas / KPI Cards Interactivas */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 pt-2">
-          {/* Card 1: Entradas Vendidas */}
+        {/* Botones de acción */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {onCreateEvent && (
+            <button
+              onClick={() => setIsCreateEventModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 text-xs font-medium transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Publicar Evento
+            </button>
+          )}
           <button
-            onClick={() => setActiveTab('tickets')}
-            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-95 flex flex-col justify-between ${
-              activeTab === 'tickets' && ticketStats.pendingOrdersCount === 0
-                ? 'bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg'
-                : 'bg-dark-900/90 border-dark-750 hover:border-emerald-500/50'
-            }`}
+            onClick={() => setIsManualSaleModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 text-xs font-medium transition-all cursor-pointer"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
-                <Ticket className="w-3.5 h-3.5 text-emerald-400" /> Entradas
-              </span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">QR</span>
-            </div>
-            <div className="mt-2">
-              <div className="text-xl sm:text-2xl font-black text-white">{ticketStats.totalTicketsSold}</div>
-              <div className="text-[10px] text-emerald-400 font-bold truncate mt-0.5">
-                ${ticketStats.totalGrossRevenue.toLocaleString('es-AR')} ARS
-              </div>
-            </div>
+            <MessageCircle className="w-3.5 h-3.5" />
+            Cargar Venta
           </button>
-
-          {/* Card 2: Pagos en Revisión */}
           <button
-            onClick={() => setActiveTab('tickets')}
-            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-95 flex flex-col justify-between ${
-              activeTab === 'tickets'
-                ? 'bg-amber-950/50 border-amber-500 ring-2 ring-amber-500/30 shadow-lg'
-                : ticketStats.pendingOrdersCount > 0
-                ? 'bg-amber-950/40 border-amber-500/60 shadow-glow-amber animate-pulse'
-                : 'bg-dark-900/90 border-dark-750 hover:border-amber-500/50'
-            }`}
+            onClick={() => setIsAddOrgModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 text-xs font-medium transition-all cursor-pointer"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1">
-                <CreditCard className="w-3.5 h-3.5 text-amber-400" /> Pagos Rev.
-              </span>
-              {ticketStats.pendingOrdersCount > 0 && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-black">
-                  ⚠️ ACCIÓN
-                </span>
-              )}
-            </div>
-            <div className="mt-2">
-              <div className={`text-xl sm:text-2xl font-black ${ticketStats.pendingOrdersCount > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
-                {ticketStats.pendingOrdersCount}
-              </div>
-              <div className="text-[10px] text-amber-200/80 font-bold truncate mt-0.5">
-                ${ticketStats.pendingGrossAmount.toLocaleString('es-AR')} pendiente
-              </div>
-            </div>
+            <Plus className="w-3.5 h-3.5" />
+            Habilitar Org.
           </button>
-
-          {/* Card 3: Comisión Ganada */}
           <button
-            onClick={() => setActiveTab('tickets')}
-            className="p-3.5 sm:p-4 rounded-2xl border bg-dark-900/90 border-dark-750 hover:border-dance-coral/50 text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-95 flex flex-col justify-between"
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 text-xs font-medium transition-all cursor-pointer disabled:opacity-40"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
-                <DollarSign className="w-3.5 h-3.5 text-dance-coral" /> Comisiones
-              </span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-dance-coral/20 text-dance-coral font-bold">20% Fijo</span>
-            </div>
-            <div className="mt-2">
-              <div className="text-xl sm:text-2xl font-black text-dance-coral">
-                ${ticketStats.totalPlatformCommissions.toLocaleString('es-AR')}
-              </div>
-              <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
-                Ganancia neta
-              </div>
-            </div>
-          </button>
-
-          {/* Card 4: Eventos Pendientes */}
-          <button
-            onClick={() => setActiveTab('pending')}
-            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-95 flex flex-col justify-between ${
-              activeTab === 'pending'
-                ? 'bg-dance-crimson/20 border-dance-crimson ring-2 ring-dance-crimson/30 shadow-lg'
-                : 'bg-dark-900/90 border-dark-750 hover:border-dance-crimson/50'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-dance-crimson" /> Evt. Pend.
-              </span>
-              {pendingEvents.length > 0 && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-dance-crimson/30 text-rose-300 font-black">
-                  {pendingEvents.length}
-                </span>
-              )}
-            </div>
-            <div className="mt-2">
-              <div className={`text-xl sm:text-2xl font-black ${pendingEvents.length > 0 ? 'text-dance-crimson' : 'text-slate-400'}`}>
-                {pendingEvents.length}
-              </div>
-              <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
-                Por autorizar
-              </div>
-            </div>
-          </button>
-
-          {/* Card 5: Organizadores Pendientes */}
-          <button
-            onClick={() => {
-              setActiveTab('users');
-              setUserFilter('pending');
-            }}
-            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-95 flex flex-col justify-between ${
-              activeTab === 'users' && userFilter === 'pending'
-                ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/30 shadow-lg'
-                : 'bg-dark-900/90 border-dark-750 hover:border-amber-500/50'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
-                <Users className="w-3.5 h-3.5 text-amber-400" /> Org. Pend.
-              </span>
-              {pendingOrganizers.length > 0 && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-black">
-                  {pendingOrganizers.length}
-                </span>
-              )}
-            </div>
-            <div className="mt-2">
-              <div className={`text-xl sm:text-2xl font-black ${pendingOrganizers.length > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
-                {pendingOrganizers.length}
-              </div>
-              <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
-                Solicitudes de alta
-              </div>
-            </div>
-          </button>
-
-          {/* Card 6: Destacados */}
-          <button
-            onClick={() => {
-              setActiveTab('all');
-              setEventFilter('featured');
-            }}
-            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-95 flex flex-col justify-between ${
-              activeTab === 'all' && eventFilter === 'featured'
-                ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/30 shadow-lg'
-                : 'bg-dark-900/90 border-dark-750 hover:border-amber-500/50'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Destacados
-              </span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Hero</span>
-            </div>
-            <div className="mt-2">
-              <div className="text-xl sm:text-2xl font-black text-amber-400">{featuredEvents.length}</div>
-              <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
-                Portada principal
-              </div>
-            </div>
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Sincronizando...' : 'Actualizar'}
           </button>
         </div>
       </div>
 
-      {/* Cartel de Notificación de Sincronización Exitosa */}
+      {/* KPIs minimalistas */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {[
+          { label: 'Entradas', value: ticketStats.totalTicketsSold, sub: `$${ticketStats.totalGrossRevenue.toLocaleString('es-AR')}`, icon: <Ticket className="w-3.5 h-3.5" />, active: activeTab === 'tickets', onClick: () => setActiveTab('tickets') },
+          { label: 'Pagos Rev.', value: ticketStats.pendingOrdersCount, sub: `$${ticketStats.pendingGrossAmount.toLocaleString('es-AR')}`, icon: <CreditCard className="w-3.5 h-3.5" />, active: activeTab === 'tickets', alert: ticketStats.pendingOrdersCount > 0, onClick: () => setActiveTab('tickets') },
+          { label: 'Comisiones', value: `$${ticketStats.totalPlatformCommissions.toLocaleString('es-AR')}`, sub: 'Ganancia neta', icon: <DollarSign className="w-3.5 h-3.5" />, active: false, onClick: () => setActiveTab('tickets') },
+          { label: 'Evt. Pend.', value: pendingEvents.length, sub: 'Por autorizar', icon: <Calendar className="w-3.5 h-3.5" />, active: activeTab === 'pending', alert: pendingEvents.length > 0, onClick: () => setActiveTab('pending') },
+          { label: 'Org. Pend.', value: pendingOrganizers.length, sub: 'Solicitudes', icon: <Users className="w-3.5 h-3.5" />, active: activeTab === 'users', alert: pendingOrganizers.length > 0, onClick: () => { setActiveTab('users'); setUserFilter('pending'); } },
+          { label: 'Destacados', value: featuredEvents.length, sub: 'Portada', icon: <Star className="w-3.5 h-3.5" />, active: activeTab === 'all', onClick: () => { setActiveTab('all'); setEventFilter('featured'); } },
+        ].map((kpi, i) => (
+          <button
+            key={i}
+            onClick={kpi.onClick}
+            className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+              kpi.active
+                ? 'bg-zinc-800/60 border-zinc-600/60'
+                : kpi.alert
+                ? 'bg-amber-950/20 border-amber-700/30'
+                : 'bg-zinc-850/40 border-zinc-800/40 hover:border-zinc-700/50'
+            }`}
+          >
+            <div className="flex items-center gap-1 text-[10px] text-zinc-500 mb-1">
+              {kpi.icon}
+              <span>{kpi.label}</span>
+            </div>
+            <div className={`text-lg font-bold ${kpi.alert ? 'text-amber-400' : 'text-zinc-200'}`}>{kpi.value}</div>
+            <div className="text-[9px] text-zinc-600 mt-0.5 truncate">{kpi.sub}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Notificación de sync — discreta */}
       {syncNotice && (
-        <div className="p-4 bg-emerald-950/90 border border-emerald-600/80 rounded-2xl text-xs text-emerald-300 font-bold flex items-center gap-2.5 animate-fadeIn shadow-lg">
-          <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/40 border border-zinc-700/30 text-[11px] text-zinc-400">
+          <CheckCircle className="w-3.5 h-3.5 text-emerald-400/70 shrink-0" />
           <span>{syncNotice}</span>
         </div>
       )}
 
-      {/* Alerta Destacada si existen Solicitudes o Pagos Pendientes */}
+      {/* Alerta de tareas pendientes — minimalista */}
       {totalPendingActions > 0 && (
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-950/80 via-[#191522] to-dance-crimson/20 border-2 border-amber-500/60 rounded-3xl shadow-glow-amber flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fadeIn">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 text-xl font-black">
-              🔥
-            </div>
-            <div>
-              <h2 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
-                <span>Atención: Tenés {totalPendingActions} tarea(s) pendiente(s)</span>
-              </h2>
-              <p className="text-xs text-amber-200/90 mt-0.5 space-x-2 flex flex-wrap gap-y-1">
-                {ticketStats.pendingOrdersCount > 0 && (
-                  <span className="font-bold text-amber-300">
-                    • {ticketStats.pendingOrdersCount} pago(s) de entradas por verificar (${ticketStats.pendingGrossAmount.toLocaleString('es-AR')} ARS)
-                  </span>
-                )}
-                {pendingEvents.length > 0 && <span>• {pendingEvents.length} evento(s) para autorizar</span>}
-                {pendingOrganizers.length > 0 && <span>• {pendingOrganizers.length} alta(s) de organizador</span>}
-              </p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg bg-amber-950/20 border border-amber-700/30">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-500/60 shrink-0" />
+            <div className="text-[11px] text-zinc-400">
+              <span className="font-medium text-zinc-200">{totalPendingActions} tareas pendientes</span>
+              <span className="text-zinc-500 ml-2">
+                {ticketStats.pendingOrdersCount > 0 && `${ticketStats.pendingOrdersCount} pagos · `}
+                {pendingEvents.length > 0 && `${pendingEvents.length} eventos · `}
+                {pendingOrganizers.length > 0 && `${pendingOrganizers.length} organizadores`}
+              </span>
             </div>
           </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          <div className="flex items-center gap-1.5">
             {ticketStats.pendingOrdersCount > 0 && (
               <button
                 onClick={() => setActiveTab('tickets')}
-                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="px-2.5 py-1 rounded-md bg-zinc-800/60 text-zinc-300 text-[11px] font-medium hover:bg-zinc-700/50 transition-all cursor-pointer"
               >
-                <DollarSign className="w-4 h-4" />
-                <span>Verificar Pagos ({ticketStats.pendingOrdersCount})</span>
+                Verificar pagos
               </button>
             )}
             {(pendingOrganizers.length > 0 || pendingEvents.length > 0) && (
               <button
                 onClick={() => setActiveTab('pending')}
-                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-dance-coral hover:opacity-95 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                className="px-2.5 py-1 rounded-md bg-zinc-800/60 text-zinc-300 text-[11px] font-medium hover:bg-zinc-700/50 transition-all cursor-pointer"
               >
-                Revisar Solicitudes ({pendingOrganizers.length + pendingEvents.length})
+                Revisar solicitudes
               </button>
             )}
           </div>
         </div>
       )}
 
-      {/* Menú de Navegación de Control Maestro (En Grilla Responsiva) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-2.5 sm:gap-3">
-        {/* Menú 1: Solicitudes Pendientes */}
-        <button
-          onClick={() => setActiveTab('pending')}
-          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-            activeTab === 'pending'
-              ? 'bg-amber-500 text-slate-950 font-black border-amber-400 ring-2 ring-amber-400/40 shadow-lg'
-              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-amber-500/50 hover:bg-dark-850'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              activeTab === 'pending' ? 'bg-slate-950 text-amber-400' : 'bg-amber-500/20 text-amber-400'
-            }`}>
-              <Clock className="w-4 h-4" />
-            </div>
-            {(pendingOrganizers.length + pendingEvents.length) > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                activeTab === 'pending' ? 'bg-slate-950 text-amber-300' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-              }`}>
-                {pendingOrganizers.length + pendingEvents.length} pend.
-              </span>
+      {/* Menú de navegación — tabs estilo underline */}
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-zinc-800/50 pb-px -mb-px">
+        {([
+          { id: 'pending' as const, label: 'Solicitudes', icon: <Clock className="w-3.5 h-3.5" />, count: pendingOrganizers.length + pendingEvents.length },
+          { id: 'radar' as const, label: 'Radar', icon: <Bot className="w-3.5 h-3.5" />, count: undefined },
+          { id: 'tickets' as const, label: 'Ventas', icon: <DollarSign className="w-3.5 h-3.5" />, count: ticketStats.pendingOrdersCount > 0 ? ticketStats.pendingOrdersCount : undefined },
+          { id: 'devices' as const, label: 'Equipos', icon: <Smartphone className="w-3.5 h-3.5" />, count: undefined },
+          { id: 'users' as const, label: 'Organizadores', icon: <Users className="w-3.5 h-3.5" />, count: usersList.length },
+          { id: 'all' as const, label: 'Cartelera', icon: <Calendar className="w-3.5 h-3.5" />, count: events.length },
+          { id: 'reports' as const, label: 'Denuncias', icon: <Flag className="w-3.5 h-3.5" />, count: activeReports.length > 0 ? activeReports.length : undefined },
+          { id: 'bots' as const, label: 'Bots IA', icon: <Bot className="w-3.5 h-3.5" />, count: 10 },
+        ]).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.id);
+              if (tab.id === 'users') setUserFilter('all');
+              if (tab.id === 'all') setEventFilter('all');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium transition-all cursor-pointer border-b-2 whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'border-zinc-300 text-zinc-200'
+                : 'border-transparent text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+            {tab.count != null && tab.count > 0 && (
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                activeTab === tab.id ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800/60 text-zinc-500'
+              }`}>{tab.count}</span>
             )}
-          </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold truncate">🔥 Solicitudes</div>
-            <div className={`text-[10px] truncate ${activeTab === 'pending' ? 'text-slate-900 font-bold' : 'text-slate-400'}`}>
-              Org ({pendingOrganizers.length}) • Evt ({pendingEvents.length})
-            </div>
-          </div>
-        </button>
-
-        {/* Menú 2: Radar Bot Instagram (Extracción IA) */}
-        <button
-          onClick={() => setActiveTab('radar')}
-          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-            activeTab === 'radar'
-              ? 'bg-purple-600 text-white font-black border-purple-400 ring-2 ring-purple-400/40 shadow-lg shadow-purple-500/20'
-              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-purple-500/50 hover:bg-dark-850'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              activeTab === 'radar' ? 'bg-slate-950 text-purple-400' : 'bg-purple-500/20 text-purple-400'
-            }`}>
-              <Bot className="w-4 h-4" />
-            </div>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-              activeTab === 'radar' ? 'bg-slate-950 text-purple-300' : 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-            }`}>
-              IA Radar
-            </span>
-          </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold truncate">🤖 Radar Bot</div>
-            <div className={`text-[10px] truncate ${activeTab === 'radar' ? 'text-purple-100 font-bold' : 'text-slate-400'}`}>
-              Instagram & Flyers
-            </div>
-          </div>
-        </button>
-
-        {/* Menú 3: Ventas & Pagos de Entradas */}
-        <button
-          onClick={() => setActiveTab('tickets')}
-          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-            activeTab === 'tickets'
-              ? 'bg-emerald-600 text-white font-black border-emerald-400 ring-2 ring-emerald-400/40 shadow-lg'
-              : ticketStats.pendingOrdersCount > 0
-              ? 'bg-amber-950/40 border-amber-500/60 text-amber-300 shadow-glow-amber animate-pulse'
-              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-emerald-500/50 hover:bg-dark-850'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              activeTab === 'tickets' ? 'bg-slate-950 text-emerald-400' : 'bg-emerald-500/20 text-emerald-400'
-            }`}>
-              <DollarSign className="w-4 h-4" />
-            </div>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-              activeTab === 'tickets'
-                ? 'bg-slate-950 text-emerald-300'
-                : ticketStats.pendingOrdersCount > 0
-                ? 'bg-amber-500 text-slate-950 font-black'
-                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-            }`}>
-              {ticketStats.pendingOrdersCount > 0 ? `⚠️ ${ticketStats.pendingOrdersCount} por revisar` : `${ticketStats.totalTicketsSold} QR`}
-            </span>
-          </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold truncate">💳 Ventas & Pagos</div>
-            <div className={`text-[10px] truncate ${activeTab === 'tickets' ? 'text-emerald-100 font-bold' : 'text-slate-400'}`}>
-              {ticketStats.pendingOrdersCount > 0 ? 'Transferencias pendientes' : 'Entradas y recaudación'}
-            </div>
-          </div>
-        </button>
-
-        {/* Menú 4: Equipos & Descargas de la App */}
-        <button
-          onClick={() => setActiveTab('devices')}
-          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-            activeTab === 'devices'
-              ? 'bg-blue-600 text-white font-black border-blue-400 ring-2 ring-blue-400/40 shadow-lg shadow-blue-500/20'
-              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-blue-500/50 hover:bg-dark-850'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              activeTab === 'devices' ? 'bg-slate-950 text-blue-400' : 'bg-blue-500/20 text-blue-400'
-            }`}>
-              <Smartphone className="w-4 h-4" />
-            </div>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-              activeTab === 'devices'
-                ? 'bg-slate-950 text-blue-300'
-                : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-            }`}>
-              {deviceStats.installedDevices} descargas
-            </span>
-          </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold truncate">📱 Equipos & App</div>
-            <div className={`text-[10px] truncate ${activeTab === 'devices' ? 'text-blue-100 font-bold' : 'text-slate-400'}`}>
-              {deviceStats.totalDevices} equipos registrados
-            </div>
-          </div>
-        </button>
-
-        {/* Menú 5: Organizadores & Permisos */}
-        <button
-          onClick={() => {
-            setActiveTab('users');
-            setUserFilter('all');
-          }}
-          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-            activeTab === 'users'
-              ? 'bg-dark-750 text-white font-black border-dance-coral ring-2 ring-dance-coral/40 shadow-lg'
-              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-dance-coral/50 hover:bg-dark-850'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-8 h-8 rounded-xl bg-dance-coral/20 text-dance-coral flex items-center justify-center">
-              <Users className="w-4 h-4" />
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-dark-800 text-slate-300 border border-dark-700">
-              {usersList.length} total
-            </span>
-          </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold truncate">👥 Organizadores</div>
-            <div className="text-[10px] text-slate-400 truncate">
-              {approvedOrganizers.length} habilitados para publicar
-            </div>
-          </div>
-        </button>
-
-        {/* Menú 6: Todos los Eventos */}
-        <button
-          onClick={() => {
-            setActiveTab('all');
-            setEventFilter('all');
-          }}
-          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-            activeTab === 'all'
-              ? 'bg-dark-750 text-white font-black border-sky-500 ring-2 ring-sky-500/40 shadow-lg'
-              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-sky-500/50 hover:bg-dark-850'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-dark-800 text-slate-300 border border-dark-700">
-              {events.length}
-            </span>
-          </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold truncate">📅 Cartelera Total</div>
-            <div className="text-[10px] text-slate-400 truncate">
-              {featuredEvents.length} destacados • {events.filter(e => e.status === 'publicado').length} activos
-            </div>
-          </div>
-        </button>
-
-        {/* Menú 7: Denuncias */}
-        <button
-          onClick={() => setActiveTab('reports')}
-          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-            activeTab === 'reports'
-              ? 'bg-dark-750 text-white font-black border-amber-500 ring-2 ring-amber-500/40 shadow-lg'
-              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-amber-500/50 hover:bg-dark-850'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-              <Flag className="w-4 h-4" />
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-dark-800 text-slate-300 border border-dark-700">
-              {activeReports.length}
-            </span>
-          </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold truncate">🚩 Denuncias</div>
-            <div className="text-[10px] text-slate-400 truncate">
-              {activeReports.length === 0 ? 'Comunidad al día' : 'Reportes por revisar'}
-            </div>
-          </div>
-        </button>
-
-        {/* Menú 8: Bots IA */}
-        <button
-          onClick={() => setActiveTab('bots')}
-          className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-            activeTab === 'bots'
-              ? 'bg-dance-crimson/30 text-white font-black border-dance-crimson ring-2 ring-dance-crimson/40 shadow-lg'
-              : 'bg-dark-900 border-dark-750 text-slate-300 hover:border-dance-crimson/50 hover:bg-dark-850'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              activeTab === 'bots' ? 'bg-slate-950 text-dance-crimson' : 'bg-dance-crimson/20 text-dance-crimson'
-            }`}>
-              <Bot className="w-4 h-4" />
-            </div>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-              activeTab === 'bots'
-                ? 'bg-slate-950 text-dance-crimson'
-                : 'bg-dance-crimson/20 text-dance-crimson border border-dance-crimson/40'
-            }`}>
-              10 bots
-            </span>
-          </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold truncate">🤖 Bots IA</div>
-            <div className={`text-[10px] truncate ${activeTab === 'bots' ? 'text-dance-crimson/80 font-bold' : 'text-slate-400'}`}>
-              Cazador, Outreach, Radar
-            </div>
-          </div>
-        </button>
+          </button>
+        ))}
       </div>
 
       {/* Tab: Radar Bot de Instagram & Extracción IA */}
