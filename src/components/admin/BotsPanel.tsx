@@ -55,7 +55,7 @@ const colorClasses: Record<string, { bg: string; text: string; border: string; r
 
 const DASHBOARD_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:8585'
-  : 'http://129.146.75.135:8585';
+  : 'https://salebaile.duckdns.org';
 
 export const BotsPanel: React.FC = () => {
   const [runningBot, setRunningBot] = useState<string | null>(null);
