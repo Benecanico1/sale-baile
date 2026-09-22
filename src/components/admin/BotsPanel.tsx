@@ -53,7 +53,9 @@ const colorClasses: Record<string, { bg: string; text: string; border: string; r
   rose: { bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/40', ring: 'ring-rose-500/30' },
 };
 
-const DASHBOARD_URL = 'http://localhost:8585';
+const DASHBOARD_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8585'
+  : 'http://129.146.75.135:8585';
 
 export const BotsPanel: React.FC = () => {
   const [runningBot, setRunningBot] = useState<string | null>(null);
