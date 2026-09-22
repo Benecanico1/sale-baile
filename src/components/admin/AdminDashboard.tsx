@@ -517,88 +517,89 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Tab: Centro Unificado de Solicitudes Pendientes */}
       {activeTab === 'pending' && (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Sub-Sección 1: Solicitudes de Alta de Organizadores */}
           <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-dark-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-800/50">
               <div className="flex items-center gap-2">
-                <Building className="w-5 h-5 text-amber-400" />
-                <h3 className="text-base font-black text-white">
-                  1. Solicitudes de Alta como Organizador ({pendingOrganizers.length})
+                <Building className="w-4 h-4 text-zinc-500" />
+                <h3 className="text-sm font-semibold text-zinc-200">
+                  Solicitudes de Alta como Organizador
                 </h3>
+                <span className="text-[10px] text-zinc-600">({pendingOrganizers.length})</span>
               </div>
               <button
                 onClick={() => setIsAddOrgModalOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-dance-coral hover:bg-dance-coral/90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md self-start sm:self-auto cursor-pointer transition-all active:scale-95"
+                className="px-2.5 py-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 hover:bg-zinc-700/40 text-xs font-medium flex items-center gap-1.5 self-start sm:self-auto cursor-pointer transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Habilitar Organizador Manualmente</span>
+                <span>Habilitar Organizador Manualmente</span>
               </button>
             </div>
 
             {pendingOrganizers.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-2.5">
                 {pendingOrganizers.map((u) => (
                   <div
                     key={u.id}
-                    className="bg-dark-900 border-2 border-amber-500/40 rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl"
+                    className="bg-zinc-900/50 border border-zinc-800/40 hover:border-zinc-700/50 rounded-lg p-3.5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 transition-colors"
                   >
-                    <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
                       <img
                         src={u.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'}
                         alt=""
-                        className="w-14 h-14 rounded-2xl object-cover border border-white/10 shrink-0 shadow-md"
+                        className="w-10 h-10 rounded-lg object-cover border border-zinc-700/40 shrink-0"
                       />
                       <div className="space-y-1.5 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-black text-base text-white">{u.full_name}</h4>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                            SOLICITUD DE ALTA
+                          <h4 className="text-sm font-semibold text-zinc-100">{u.full_name}</h4>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-300/90 border border-amber-500/20">
+                            Solicitud de Alta
                           </span>
                         </div>
-                        <p className="text-xs text-slate-300 font-mono">{u.email}</p>
+                        <p className="text-xs text-zinc-400 font-mono">{u.email}</p>
                         {u.organizer_request_notes && (
-                          <p className="text-xs text-slate-200 bg-[#0e121d] p-3 rounded-xl border border-white/5 mt-1">
-                            💬 <strong>Propuesta:</strong> "{u.organizer_request_notes}"
+                          <p className="text-xs text-zinc-400 bg-zinc-850/60 p-2.5 rounded-lg border border-zinc-800/40 mt-1">
+                            <strong className="text-zinc-300">Propuesta:</strong> "{u.organizer_request_notes}"
                           </p>
                         )}
-                        <div className="flex items-center gap-2 flex-wrap pt-0.5 text-xs">
+                        <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-xs">
                           {u.whatsapp_phone && (
                             <a
                               href={`https://wa.me/${u.whatsapp_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${u.full_name}, te escribo desde la administración de Sale Baile sobre tu solicitud de organizador.`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-3 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs border border-emerald-500/40 flex items-center gap-1.5 transition-colors"
+                              className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300/90 font-medium text-xs border border-emerald-500/20 flex items-center gap-1.5 transition-colors"
                             >
                               <MessageCircle className="w-3.5 h-3.5" />
                               <span>WhatsApp: {u.whatsapp_phone}</span>
                             </a>
                           )}
                           {u.instagram_handle && (
-                            <span className="px-3 py-1 rounded-xl bg-pink-500/15 text-pink-300 font-bold text-xs border border-pink-500/30">
-                              📷 {u.instagram_handle}
+                            <span className="px-2.5 py-1 rounded-lg bg-pink-500/10 text-pink-300/90 font-medium text-xs border border-pink-500/20">
+                              {u.instagram_handle}
                             </span>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-500">
+                        <p className="text-[10px] text-zinc-600">
                           Fecha de solicitud: {u.organizer_request_date ? new Date(u.organizer_request_date).toLocaleString('es-AR') : 'Reciente'}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0 w-full md:w-auto flex-wrap">
+                    <div className="flex items-center gap-1.5 shrink-0 w-full md:w-auto flex-wrap">
                       <button
                         onClick={() => handleApproveOrganizer(u.id)}
-                        className="flex-1 md:flex-initial py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white text-xs font-black rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 cursor-pointer"
+                        className="flex-1 md:flex-initial py-2 px-3 bg-zinc-700/50 hover:bg-emerald-700/40 text-emerald-300 text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <UserCheck className="w-4 h-4" />
-                        <span>✓ APROBAR ORGANIZADOR</span>
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>Aprobar</span>
                       </button>
                       <button
                         onClick={() => rejectOrganizer(u.id)}
-                        className="py-2.5 px-3 bg-dark-800 hover:bg-dark-750 text-slate-300 text-xs font-bold rounded-xl border border-dark-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="py-2 px-3 bg-zinc-800/40 hover:bg-rose-900/40 text-rose-400 text-xs font-medium rounded-lg border border-zinc-700/40 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <XCircle className="w-4 h-4 text-slate-400" />
+                        <XCircle className="w-3.5 h-3.5" />
                         Rechazar
                       </button>
                       <button
@@ -607,33 +608,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             await deleteUser(u.id || u.email);
                           }
                         }}
-                        className="py-2.5 px-3 bg-rose-950/50 hover:bg-rose-900 text-rose-300 text-xs font-bold rounded-xl border border-rose-800/60 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="py-2 px-3 bg-zinc-800/40 hover:bg-rose-900/40 text-rose-400 text-xs font-medium rounded-lg border border-zinc-700/40 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                         title="Eliminar registro"
                       >
-                        <span>🗑️ Eliminar</span>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Eliminar
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-5 bg-dark-900 border border-dark-800 rounded-2xl text-center text-xs text-slate-400">
-                ✅ No hay solicitudes pendientes de organizadores en este momento.
+              <div className="p-4 bg-zinc-900/40 border border-zinc-800/40 rounded-lg text-center text-xs text-zinc-500">
+                No hay solicitudes pendientes de organizadores en este momento.
               </div>
             )}
           </div>
 
           {/* Sub-Sección 2: Solicitudes de Publicación de Eventos / Flyers */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center gap-2 pb-1 border-b border-dark-800">
-              <Calendar className="w-5 h-5 text-dance-crimson" />
-              <h3 className="text-base font-black text-white">
-                2. Solicitudes de Publicación de Eventos / Flyers ({pendingEvents.length})
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center gap-2 pb-2 border-b border-zinc-800/50">
+              <Calendar className="w-4 h-4 text-zinc-500" />
+              <h3 className="text-sm font-semibold text-zinc-200">
+                Solicitudes de Publicación de Eventos
               </h3>
+              <span className="text-[10px] text-zinc-600">({pendingEvents.length})</span>
             </div>
 
             {pendingEvents.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-2.5">
                 {pendingEvents.map((evt) => {
                   const sched = formatEventSchedule(evt.start_time, evt.end_time);
                   const advPrice = evt.advance_ticket_price || evt.price || 0;
@@ -644,77 +647,75 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   return (
                     <div
                       key={evt.id}
-                      className="bg-dark-900 border-2 border-amber-500/40 rounded-3xl p-5 flex flex-col md:flex-row gap-5 items-start md:items-center justify-between shadow-xl"
+                      className="bg-zinc-900/50 border border-zinc-800/40 hover:border-zinc-700/50 rounded-lg p-3.5 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between transition-colors"
                     >
-                      <div className="flex flex-col sm:flex-row gap-4 items-start min-w-0 flex-1">
-                        <div className="w-24 sm:w-28 aspect-[3/4] rounded-2xl overflow-hidden bg-dark-950 shrink-0 border border-dark-700 shadow-md">
+                      <div className="flex flex-col sm:flex-row gap-3.5 items-start min-w-0 flex-1">
+                        <div className="w-16 sm:w-20 aspect-[3/4] rounded-lg overflow-hidden bg-zinc-900 shrink-0 border border-zinc-800/40">
                           <img src={evt.flyer_url} alt="" className="w-full h-full object-cover" />
                         </div>
 
                         <div className="space-y-2 min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                              EVENTO EN REVISIÓN
+                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-300/90 border border-amber-500/20">
+                              En Revisión
                             </span>
-                            <span className="text-xs font-bold text-dance-crimson uppercase">
+                            <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
                               {evt.category}
                             </span>
                           </div>
 
-                          <h3 className="font-black text-lg text-white leading-tight">{evt.title}</h3>
+                          <h3 className="text-sm font-semibold text-zinc-100 leading-tight">{evt.title}</h3>
 
-                          <div className="text-xs text-slate-400 flex items-center gap-3 flex-wrap">
+                          <div className="text-xs text-zinc-400 flex items-center gap-2.5 flex-wrap">
                             <span className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5 text-dance-crimson" />
+                              <Calendar className="w-3 h-3 text-zinc-600" />
                               {sched.dateLabel} ({sched.timeRange})
                             </span>
                             <span className="flex items-center gap-1">
-                              <MapPin className="w-3.5 h-3.5 text-dance-orange" />
+                              <MapPin className="w-3 h-3 text-zinc-600" />
                               {evt.venue_name} ({evt.city})
                             </span>
                           </div>
 
                           {/* CUADRO DEL ACUERDO COMERCIAL Y REVENTA PARA EL ADMIN */}
                           {!evt.is_free && (
-                            <div className="p-3.5 rounded-2xl bg-[#0c101c] border border-amber-500/30 space-y-2">
+                            <div className="p-2.5 rounded-lg bg-zinc-850/60 border border-zinc-800/40 space-y-2">
                               <div className="flex items-center justify-between flex-wrap gap-2">
-                                <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                                  <DollarSign className="w-3.5 h-3.5 text-amber-400" />
+                                <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <DollarSign className="w-3 h-3 text-zinc-500" />
                                   Propuesta Comercial de Reventa
                                 </span>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black border border-emerald-500/40">
-                                    Ganancia Sale Baile: +${profitPerTicket.toLocaleString('es-AR')} ({profitPct}%)
-                                  </span>
-                                </div>
+                                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300/90 text-[10px] font-medium border border-emerald-500/20">
+                                  +${profitPerTicket.toLocaleString('es-AR')} ({profitPct}%)
+                                </span>
                               </div>
 
-                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                                <div className="p-2 rounded-xl bg-dark-900 border border-white/5">
-                                  <span className="text-slate-400 text-[10px] block">Público (Puerta / Anticipada):</span>
-                                  <strong className="text-white">${advPrice.toLocaleString('es-AR')} ARS</strong>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs">
+                                <div className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/40">
+                                  <span className="text-zinc-600 text-[10px] block">Público (Puerta / Anticipada)</span>
+                                  <strong className="text-zinc-200">${advPrice.toLocaleString('es-AR')} ARS</strong>
                                 </div>
-                                <div className="p-2 rounded-xl bg-dark-900 border border-white/5">
-                                  <span className="text-amber-400/80 text-[10px] block">Costo Reventa para Admin:</span>
-                                  <strong className="text-amber-200">${resalePrice.toLocaleString('es-AR')} ARS</strong>
+                                <div className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/40">
+                                  <span className="text-zinc-600 text-[10px] block">Costo Reventa Admin</span>
+                                  <strong className="text-amber-300/80">${resalePrice.toLocaleString('es-AR')} ARS</strong>
                                 </div>
-                                <div className="p-2 rounded-xl bg-dark-900 border border-white/5 col-span-2 sm:col-span-1">
-                                  <span className="text-emerald-400/80 text-[10px] block">Ganancia Neta Admin:</span>
-                                  <strong className="text-emerald-400 font-black">+${profitPerTicket.toLocaleString('es-AR')} / ticket</strong>
+                                <div className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/40 col-span-2 sm:col-span-1">
+                                  <span className="text-zinc-600 text-[10px] block">Ganancia Neta Admin</span>
+                                  <strong className="text-emerald-300/90">+${profitPerTicket.toLocaleString('es-AR')} / ticket</strong>
                                 </div>
                               </div>
 
                               {evt.organizer_notes_to_admin && (
-                                <p className="text-[11px] text-slate-300 bg-dark-900 p-2 rounded-xl border border-white/5">
-                                  💬 <strong>Mensaje del Organizador:</strong> {evt.organizer_notes_to_admin}
+                                <p className="text-[11px] text-zinc-400 bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/40">
+                                  <strong className="text-zinc-300">Mensaje del Organizador:</strong> {evt.organizer_notes_to_admin}
                                 </p>
                               )}
                             </div>
                           )}
 
-                          <div className="text-xs text-slate-400 flex items-center justify-between flex-wrap gap-2 pt-1">
+                          <div className="text-xs text-zinc-400 flex items-center justify-between flex-wrap gap-2 pt-0.5">
                             <div>
-                              Organizador: <strong className="text-slate-200">{evt.organizer_name}</strong>
+                              Organizador: <strong className="text-zinc-300">{evt.organizer_name}</strong>
                             </div>
 
                             {evt.organizer_whatsapp && (
@@ -722,61 +723,61 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 href={`https://wa.me/${evt.organizer_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${evt.organizer_name}, te escribo desde la Administración de Sale Baile sobre tu solicitud para "${evt.title}".`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
+                                className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300/90 font-medium text-xs border border-emerald-500/20 flex items-center gap-1.5 transition-colors"
                               >
                                 <MessageCircle className="w-3.5 h-3.5" />
-                                <span>Conversar por WhatsApp</span>
+                                <span>WhatsApp</span>
                               </a>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto shrink-0">
-                        {/* Opción 0: Editar antes de Aprobar */}
+                      <div className="flex flex-col sm:flex-row md:flex-col gap-1.5 w-full md:w-auto shrink-0">
+                        {/* Editar antes de Aprobar */}
                         <button
                           onClick={() => setEditingPendingEvent(evt)}
-                          className="py-2.5 px-4 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:opacity-95 text-white text-xs font-black rounded-xl border border-purple-400/40 flex items-center justify-center gap-1.5 shadow-md shadow-purple-900/30 transition-all cursor-pointer"
+                          className="py-2 px-3 bg-zinc-800/60 border border-zinc-700/40 hover:bg-zinc-700/40 text-zinc-300 text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                           title="Editar flyer, precios, comisión y detalles antes de publicar"
                         >
-                          <Edit3 className="w-4 h-4" />
-                          <span>✏️ Editar antes de Aprobar</span>
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Editar</span>
                         </button>
 
-                        {/* Opción 1: Aprobar Normal */}
+                        {/* Aprobar Normal */}
                         <button
                           onClick={() => handleApprove(evt.id, false)}
-                          className="py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white text-xs font-black rounded-xl flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer"
+                          className="py-2 px-3 bg-zinc-700/50 hover:bg-emerald-700/40 text-emerald-300 text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                           title="Publicar en la lista estándar de eventos"
                         >
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Aprobar Normal (Cartelera)</span>
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>Aprobar (Cartelera)</span>
                         </button>
 
-                        {/* Opción 2: Aprobar + Destacar */}
+                        {/* Aprobar + Destacar */}
                         <button
                           onClick={() => handleApprove(evt.id, true)}
-                          className="py-2.5 px-4 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:opacity-95 text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md border border-amber-300 transition-all cursor-pointer"
+                          className="py-2 px-3 bg-zinc-700/50 hover:bg-amber-700/40 text-amber-300 text-xs font-medium rounded-lg border border-zinc-700/40 hover:border-amber-600/40 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                           title="Publicar y ubicar en la cabecera de Destacados (Hero Carousel)"
                         >
-                          <Star className="w-4 h-4 fill-slate-950" />
-                          <span>Aprobar + ⭐ DESTACAR</span>
+                          <Star className="w-3.5 h-3.5" />
+                          <span>Aprobar + Destacar</span>
                         </button>
 
                         <button
                           onClick={() => onSelectEventPreview(evt)}
-                          className="py-2 px-4 bg-dark-800 hover:bg-dark-750 text-slate-200 text-xs font-medium rounded-xl border border-dark-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          className="py-2 px-3 bg-zinc-800/40 border border-zinc-700/40 hover:bg-zinc-700/40 text-zinc-300 text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                         >
-                          <Eye className="w-4 h-4" />
-                          Ver Detalle Completo
+                          <Eye className="w-3.5 h-3.5" />
+                          Ver Detalle
                         </button>
 
                         <button
                           onClick={() => setRejectingId(evt.id)}
-                          className="py-2 px-4 bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 text-xs font-medium rounded-xl border border-rose-800/50 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          className="py-2 px-3 bg-zinc-800/40 border border-zinc-700/40 hover:bg-rose-900/40 text-rose-400 text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                         >
-                          <XCircle className="w-4 h-4" />
-                          Rechazar Solicitud
+                          <XCircle className="w-3.5 h-3.5" />
+                          Rechazar
                         </button>
 
                         <button
@@ -787,35 +788,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               }
                             }
                           }}
-                          className="py-2 px-4 bg-rose-950/60 hover:bg-rose-900 text-rose-300 hover:text-white text-xs font-bold rounded-xl border border-rose-800/50 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          className="py-2 px-3 bg-zinc-800/40 border border-zinc-700/40 hover:bg-rose-900/40 text-rose-400 text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                           title="Borrar flyer definitivamente"
                         >
-                          <Trash2 className="w-4 h-4" />
-                          Eliminar Flyer
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Eliminar
                         </button>
                       </div>
 
                       {rejectingId === evt.id && (
-                        <div className="w-full mt-3 p-4 bg-rose-950/80 border border-rose-800 rounded-2xl space-y-2.5">
-                          <label className="block text-xs font-bold text-rose-200">
+                        <div className="w-full mt-2 p-3 bg-zinc-900/80 border border-zinc-700/50 rounded-lg space-y-2">
+                          <label className="block text-[11px] font-medium text-zinc-300">
                             Motivo del rechazo (se notificará al organizador):
                           </label>
                           <input
                             type="text"
                             value={rejectReason}
                             onChange={(e) => setRejectReason(e.target.value)}
-                            className="w-full px-3 py-2 bg-dark-900 border border-rose-700 rounded-xl text-xs text-white"
+                            className="w-full px-2.5 py-1.5 bg-zinc-900 border border-zinc-700/40 rounded-lg text-xs text-zinc-200 focus:border-zinc-600 outline-none"
                           />
-                          <div className="flex gap-2 justify-end">
+                          <div className="flex gap-1.5 justify-end">
                             <button
                               onClick={() => setRejectingId(null)}
-                              className="px-3 py-1.5 bg-dark-800 text-slate-300 text-xs rounded-xl"
+                              className="px-2.5 py-1.5 bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-xs rounded-lg hover:bg-zinc-700/40 transition-colors cursor-pointer"
                             >
                               Cancelar
                             </button>
                             <button
                               onClick={() => handleConfirmReject(evt.id)}
-                              className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl"
+                              className="px-3 py-1.5 bg-rose-900/50 hover:bg-rose-800/60 border border-rose-700/40 text-rose-300 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                             >
                               Confirmar Rechazo
                             </button>
@@ -827,85 +828,86 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 })}
               </div>
             ) : (
-              <div className="p-5 bg-dark-900 border border-dark-800 rounded-2xl text-center text-xs text-slate-400">
-                ✅ No hay eventos pendientes de revisión en este momento.
+              <div className="p-4 bg-zinc-900/40 border border-zinc-800/40 rounded-lg text-center text-xs text-zinc-500">
+                No hay eventos pendientes de revisión en este momento.
               </div>
             )}
           </div>
 
           {/* Sub-Sección 3: Pagos de Entradas Pendientes de Verificación */}
             {ticketStats.pendingOrders.length > 0 && (
-              <div className="space-y-3 pt-3">
-                <div className="flex items-center justify-between gap-2 pb-1 border-b border-dark-800">
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between gap-2 pb-2 border-b border-zinc-800/50">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-emerald-400" />
-                    <h3 className="text-base font-black text-white">
-                      3. Pagos de Entradas Pendientes de Verificación ({ticketStats.pendingOrders.length})
+                    <DollarSign className="w-4 h-4 text-zinc-500" />
+                    <h3 className="text-sm font-semibold text-zinc-200">
+                      Pagos de Entradas Pendientes
                     </h3>
+                    <span className="text-[10px] text-zinc-600">({ticketStats.pendingOrders.length})</span>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/30">
+                  <span className="px-2.5 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-[11px] font-medium">
                     Total: ${ticketStats.pendingGrossAmount.toLocaleString('es-AR')} ARS
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3.5">
+                <div className="grid grid-cols-1 gap-2.5">
                   {ticketStats.pendingOrders.map((ord) => (
                     <div
                       key={ord.id}
-                      className="bg-dark-900 border-2 border-amber-500/40 rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl"
+                      className="bg-zinc-900/50 border border-zinc-800/40 hover:border-zinc-700/50 rounded-lg p-3.5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 transition-colors"
                     >
-                      <div className="space-y-2 min-w-0 flex-1">
+                      <div className="space-y-1.5 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                            ORDEN {ord.id}
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-800/60 text-zinc-300 border border-zinc-700/40">
+                            Orden {ord.id}
                           </span>
-                          <span className="text-xs font-bold text-slate-300 truncate">
+                          <span className="text-xs text-zinc-400 truncate">
                             {ord.event_title}
                           </span>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs">
-                          <div>
-                            Comprador: <strong className="text-white">{ord.buyer_name}</strong> (DNI: <strong className="text-amber-300 font-mono">{ord.buyer_dni}</strong>)
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-xs">
+                          <div className="text-zinc-400">
+                            Comprador: <strong className="text-zinc-200">{ord.buyer_name}</strong> (DNI: <strong className="text-zinc-300 font-mono">{ord.buyer_dni}</strong>)
                           </div>
-                          <div className="text-emerald-400 font-black text-sm">
+                          <div className="text-emerald-300/90 font-medium text-sm">
                             ${(ord.total_amount_paid || ord.total_amount || 0).toLocaleString('es-AR')} ARS ({ord.quantity} {ord.quantity === 1 ? 'pase' : 'pases'})
                           </div>
                         </div>
 
                         {ord.payment_reference && (
-                          <div className="p-2.5 rounded-xl bg-black/40 border border-amber-500/30 text-amber-200 text-xs font-mono w-fit">
-                            💳 Ref/Comprobante: <strong className="text-amber-300">{ord.payment_reference}</strong>
+                          <div className="p-2 rounded-lg bg-zinc-850/60 border border-zinc-800/40 text-zinc-300 text-xs font-mono w-fit">
+                            <span className="text-zinc-600">Ref:</span> <strong className="text-zinc-200">{ord.payment_reference}</strong>
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 w-full md:w-auto shrink-0 flex-wrap">
+                      <div className="flex items-center gap-1.5 w-full md:w-auto shrink-0 flex-wrap">
                         {ord.buyer_whatsapp && (
                           <button
                             onClick={() => {
                               const text = `Hola ${ord.buyer_name}! Nos comunicamos de Sale Baile respecto a tu compra de entrada para "${ord.event_title}" (Orden ${ord.id}).`;
                               window.open(`https://wa.me/${ord.buyer_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
                             }}
-                            className="p-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 cursor-pointer transition-colors"
-                            title="Conversar por WhatsApp"
+                            className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300/90 border border-emerald-500/20 cursor-pointer transition-colors"
+                            title="WhatsApp"
                           >
-                            <MessageCircle className="w-4 h-4" />
+                            <MessageCircle className="w-3.5 h-3.5" />
                           </button>
                         )}
                         <button
                           onClick={() => handleApproveOrder(ord.id)}
-                          className="flex-1 md:flex-initial py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                          className="flex-1 md:flex-initial py-2 px-3 bg-zinc-700/50 hover:bg-emerald-700/40 text-emerald-300 text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                         >
-                          <Check className="w-4 h-4" />
+                          <Check className="w-3.5 h-3.5" />
                           <span>Aprobar Pago</span>
                         </button>
                         <button
                           onClick={() => handleRejectOrder(ord.id)}
-                          className="py-2.5 px-3 bg-dark-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 text-xs rounded-xl border border-white/10 cursor-pointer transition-colors"
+                          className="py-2 px-3 bg-zinc-800/40 hover:bg-rose-900/40 text-rose-400 text-xs font-medium rounded-lg border border-zinc-700/40 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                           title="Rechazar pago"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
