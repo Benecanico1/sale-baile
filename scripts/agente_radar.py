@@ -57,6 +57,9 @@ try:
 except:
     pass
 
+# Token de respaldo (emergencia) — solo usar si VITE_APIFY_TOKEN da 402
+APIFY_BACKUP_TOKEN = os.environ.get("APIFY_TOKEN_BACKUP", "")
+
 # Headers actuales de Instagram para instagrapi v2.4.5 (compatibles con @salebaile profesional)
 INSTAGRAM_HEADERS = {
     "user-agent": "Instagram 358.0.0.0.0 (iPhone; iOS 18_0; en_US; en-US; scale=3.00; 390x844; 460dpi) AppleWebKit/605.1.15",
@@ -135,8 +138,23 @@ def scrape_instagram(handle):
         resp = urllib.request.urlopen(req, timeout=90)
         posts = json.loads(resp.read())
     except urllib.error.HTTPError as e:
-        # Si Apify da 402 (token agotado/vencido), usar respaldo gratuito: instagrapi
+        # Si Apify da 402 (token agotado/vencido), usar respaldo: (1) token backup, (2) instagrapi
         if e.code == 402:
+            # 1. Intentar con token de respaldo (emergencia — usuario confirmó tenerlo)
+            if APIFY_BACKUP_TOKEN:
+                log(f"  ⚠️ Apify 402 ({handle}) — probando token de respaldo (emergencia)")
+                backup_url = f"https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token={APIFY_BACKUP_TOKEN}"
+                try:
+                    req_backup = urllib.request.Request(backup_url, data=payload, method="POST")
+                    req_backup.add_header("Content-Type", "application/json")
+                    resp_backup = urllib.request.urlopen(req_backup, timeout=90)
+                    posts = json.loads(resp_backup.read())
+                    if isinstance(posts, list) and len(posts) > 0:
+                        log(f"  ✅ Token de respaldo funcionó para {handle}")
+                        return posts
+                except:
+                    pass
+            # 2. Si el respaldo falló, usar respaldo gratuito: instagrapi
             log(f"  ⚠️ Apify 402 ({handle}) — usando respaldo instagrapi (cuenta @salebaile)")
             posts = scrape_instagram_instagrapi(handle, limit=5)
             if posts:
