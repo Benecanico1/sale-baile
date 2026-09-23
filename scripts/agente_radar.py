@@ -32,11 +32,12 @@ GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{GEM
 # Firebase RTDB
 FIREBASE_EVENTS_URL = "https://openclaw-nyj-ia-web-ddb56-default-rtdb.firebaseio.com/sale_baile/events.json"
 
-# Cuentas de Instagram monitoreadas
+# Cuentas de Instagram monitoreadas (incluye @salebaile — cuenta profesional del proyecto)
 MONITORED_ACCOUNTS = [
     {"handle": "@melanybys",            "name": "Melany Bys (José C. Paz)",          "category_tag": "bachata"},
     {"handle": "@bailamosacademia",      "name": "Club Bailamos (Ramos Mejía)",      "category_tag": "bachata"},
     {"handle": "@chambeasalsaybachata",  "name": "Chambea Salsa & Bachata (Morón)",  "category_tag": "salsa"},
+    {"handle": "@salebaile",           "name": "Sale Baile (Cuenta Oficial)",     "category_tag": "oficial"},
     {"handle": "@saborlatino.ok",        "name": "Academia Sabor Latino (Monte Grande)", "category_tag": "salsa"},
     {"handle": "@lasalseracom",          "name": "La Salsera (CABA)",                 "category_tag": "salsa"},
     {"handle": "@jorge_solohaga",        "name": "Jorge Solohaga (Salsa y Bachata)",  "category_tag": "bachata"},
