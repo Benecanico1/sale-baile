@@ -108,7 +108,7 @@ export const BotsPanel: React.FC = () => {
       if (err.name === 'AbortError') {
         setOutput((prev) => prev + '\n\n⏹️ Cancelado.');
       } else {
-        setOutput(`ℹ️ No se pudo conectar con la VPS.\n\nLos bots ya corren automáticamente en la VPS (24/7):\n• Cazador: 3 AM · Radar: 6 AM\n• Auto-Detección: cada 6h · Reportes: lunes 9 AM\n\nPara ejecución manual: doble clic en sale-baile-bots.bat\n\nLos resultados aparecen abajo en "Resultados de los Bots".`);
+        setOutput(`⚠️ DM de Instagram: bloqueo real — Apify instagram-scraper no acepta resultsType: "messages"; ese actor solo lee datos (posts, detalles, comentarios, reels). Para enviar DMs reales necesitaríamos: (a) usar una cuenta de Instagram conectada con cookies, o (b) cambiar a WhatsApp como canal de contacto.\n\nLos bots ya corren automáticamente en la VPS (24/7):\n• Cazador: 3 AM · Radar: 6 AM\n• Auto-Detección: cada 6h · Reportes: lunes 9 AM\n\nLos resultados (leads, eventos, borradores, reportes) aparecen abajo en "Resultados de los Bots".`);
       }
       setHasError(false);
     }
@@ -146,7 +146,7 @@ export const BotsPanel: React.FC = () => {
       {serverStatus === 'offline' && (
         <div className="flex items-start gap-2 p-2.5 rounded-lg bg-zinc-800/40 border border-zinc-700/40 text-[11px] text-zinc-400">
           <Server className="w-3.5 h-3.5 text-zinc-500 shrink-0 mt-0.5" />
-          <span>Los bots corren automáticamente en la VPS 24/7. Ejecución manual: <strong className="text-zinc-300">sale-baile-bots.bat</strong></span>
+          <span>Los bots corren automáticamente en la VPS 24/7. Ejecución manual: <strong className="text-zinc-300">sale-baile-bots.bat</strong><br /><span className="text-amber-400 font-medium">Nota: DMs por Instagram bloqueados — Apify instagram-scraper no envía mensajes (solo lee datos). Alternativas: (a) Instagram con cookies conectada, (b) WhatsApp.</span></span>
         </div>
       )}
 
