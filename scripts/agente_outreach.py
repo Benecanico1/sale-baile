@@ -215,6 +215,19 @@ def update_lead_in_firebase(key, updates):
         return False
 
 
+def delete_lead_from_firebase(key):
+    """Borra un lead de Firebase después de enviar el DM."""
+    url = f"{FIREBASE_BASE}/leads/{key}.json"
+    req = urllib.request.Request(url, method="DELETE")
+    try:
+        urllib.request.urlopen(req, timeout=15)
+        log(f"    🗑 Lead {key} borrado de Firebase (DM enviado)")
+        return True
+    except Exception as e:
+        log(f"    ⚠ Error borrando lead {key}: {e}", "WARN")
+        return False
+
+
 # ============================================================
 # 3b. ENVIAR DM POR INSTAGRAM (Apify)
 # ============================================================
@@ -292,6 +305,17 @@ def run(send_mode=False, max_leads=None):
     new_leads = load_new_leads()
     log(f"Leads nuevos encontrados: {len(new_leads)}")
 
+    # Filtrar organizadores ya en el grupo
+    filtered_leads = {}
+    for key, lead in new_leads.items():
+        handle = lead.get('handle', '')
+        if is_already_in_group(handle):
+            log(f'  ⏭ {handle} ya forma parte del grupo — salteado')
+        else:
+            filtered_leads[key] = lead
+    new_leads = filtered_leads
+    log(f'Leads disponibles (sin grupo): {len(new_leads)}')
+
     if not new_leads:
         log("No hay leads nuevos. Ejecutá agente_cazador.py primero.", "WARN")
         return
@@ -345,27 +369,34 @@ def run(send_mode=False, max_leads=None):
                 log(f"    ❌ Error: {detail}", "WARN")
             time.sleep(3)  # Rate limiting entre envíos
 
-        # Guardar mensaje + actualizar status
+        # Guardar mensaje + borrar si fue enviado
         if send_mode:
-            new_status = "contacted" if dm_status == "enviado" else "new"
-            last_contacted = datetime.now().isoformat() if dm_status == "enviado" else None
+            if dm_status == "enviado":
+                # Borrar lead de Firebase después de enviar el DM
+                delete_lead_from_firebase(key)
+                save_organizer(handle)
+                log(f"    ✓ {len(message)} chars → enviado y borrado")
+            else:
+                # Falló: mantener como "new" para reintentar después
+                updates = {
+                    "outreach_message": message,
+                    "status": "new",
+                    "last_contacted_at": None,
+                    "message_length": len(message),
+                    "dm_status": dm_status,
+                }
+                update_lead_in_firebase(key, updates)
+                log(f"    ✗ Error: {dm_status} — lead mantenido como new")
         else:
             # Modo generación: NO marcar como contacted, solo guardar el DM
-            new_status = "new"
-            last_contacted = None
-
-        updates = {
-            "outreach_message": message,
-            "status": new_status,
-            "last_contacted_at": last_contacted,
-            "message_length": len(message),
-            "dm_status": dm_status,
-        }
-
-        if update_lead_in_firebase(key, updates):
-            log(f"    ✓ {len(message)} chars → {dm_status}")
-        else:
-            log(f"    ✗ Error guardando", "ERROR")
+            updates = {
+                "outreach_message": message,
+                "status": "new",
+                "last_contacted_at": None,
+                "message_length": len(message),
+                "dm_status": dm_status,
+            }
+            update_lead_in_firebase(key, updates)
 
         results.append({
             "handle": handle,

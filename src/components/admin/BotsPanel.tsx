@@ -18,6 +18,8 @@ import {
   Zap,
   AlertTriangle,
   X,
+  Play,
+  Square,
 } from 'lucide-react';
 import { BotResults } from './BotResults';
 
@@ -46,6 +48,19 @@ const DASHBOARD_URL = window.location.hostname === 'localhost' || window.locatio
   ? 'http://localhost:8585'
   : 'https://salebaile.duckdns.org';
 
+const SEQUENCE = [
+  { id: 'radar', label: 'Radar' },
+  { id: 'cazador', label: 'Cazador' },
+  { id: 'autodeteccion', label: 'Auto-Detección' },
+  { id: 'contenido', label: 'Contenido' },
+  { id: 'estratega', label: 'Estratega' },
+  { id: 'investigador', label: 'Investigador' },
+  { id: 'outreach', label: 'Outreach (Generar)' },
+  { id: 'outreach_send', label: 'Outreach (Enviar)' },
+  { id: 'reportes', label: 'Reportes' },
+  { id: 'revisor', label: 'Revisor' },
+];
+
 export const BotsPanel: React.FC = () => {
   const [runningBot, setRunningBot] = useState<string | null>(null);
   const [output, setOutput] = useState<string>('');
@@ -53,6 +68,11 @@ export const BotsPanel: React.FC = () => {
   const [serverStatus, setServerStatus] = useState<'unknown' | 'online' | 'offline'>('unknown');
   const [checkingServer, setCheckingServer] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Estado de secuencia
+  const [seqRunning, setSeqRunning] = useState(false);
+  const [seqState, setSeqState] = useState<{running:boolean;current_step:string|null;completed:string[];failed:string[];started_at:string|null;finished_at:string|null}>({running:false,current_step:null,completed:[],failed:[],started_at:null,finished_at:null});
+  const seqIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const checkServer = async () => {
     setCheckingServer(true);
@@ -117,6 +137,38 @@ export const BotsPanel: React.FC = () => {
     setRunningBot(null);
   };
 
+  // Funciones de secuencia
+  const fetchSeqStatus = async () => {
+    try {
+      const resp = await fetch(`${DASHBOARD_URL}/api/sequence/status`, { signal: AbortSignal.timeout(5000) });
+      if (resp.ok) { const s = await resp.json(); setSeqState(s); setSeqRunning(s.running); }
+    } catch {}
+  };
+
+  const startSequence = async () => {
+    try {
+      const resp = await fetch(`${DASHBOARD_URL}/api/sequence/start`, { method: 'POST', signal: AbortSignal.timeout(5000) });
+      if (resp.ok) { const d = await resp.json(); if (d.ok) { setSeqRunning(true); pollSequence(); } }
+    } catch {}
+  };
+
+  const stopSequence = async () => {
+    try {
+      const resp = await fetch(`${DASHBOARD_URL}/api/sequence/stop`, { method: 'POST', signal: AbortSignal.timeout(5000) });
+      if (resp.ok) { setSeqRunning(false); if (seqIntervalRef.current) clearInterval(seqIntervalRef.current); }
+    } catch {}
+  };
+
+  const pollSequence = () => {
+    if (seqIntervalRef.current) clearInterval(seqIntervalRef.current);
+    seqIntervalRef.current = setInterval(fetchSeqStatus, 2000) as any;
+    fetchSeqStatus();
+  };
+
+  React.useEffect(() => {
+    return () => { if (seqIntervalRef.current) clearInterval(seqIntervalRef.current); };
+  }, []);
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -174,7 +226,57 @@ export const BotsPanel: React.FC = () => {
         })}
       </div>
 
-      {/* Output + Cancelar */}
+      {/* Secuencia completa */}
+            <div className="bg-zinc-850/40 border border-zinc-700/40 rounded-xl p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <span className="text-[12px] font-bold text-zinc-200">Secuencia Completa</span>
+                  <span className="text-[10px] text-zinc-600">10 bots en orden</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {seqRunning ? (
+                    <button onClick={stopSequence} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-900/30 border border-rose-700/30 text-rose-400 text-[11px] font-medium hover:bg-rose-900/50 transition-all cursor-pointer">
+                      <Square className="w-3 h-3" /> Detener
+                    </button>
+                  ) : (
+                    <button onClick={startSequence} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-900/30 border border-emerald-700/30 text-emerald-400 text-[11px] font-medium hover:bg-emerald-900/50 transition-all cursor-pointer">
+                      <Play className="w-3 h-3" /> Iniciar
+                    </button>
+                  )}
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-rose-500 to-amber-400 rounded-full transition-all duration-500" style={{ width: `${SEQUENCE.length > 0 ? Math.round(((seqState.completed.length + seqState.failed.length) / SEQUENCE.length) * 100) : 0}%` }} />
+              </div>
+              {/* Steps */}
+              <div className="flex flex-wrap gap-1.5">
+                {SEQUENCE.map((step) => {
+                  const isDone = seqState.completed.includes(step.id);
+                  const isFail = seqState.failed.includes(step.id);
+                  const isCurrent = seqState.current_step === step.id && seqRunning;
+                  return (
+                    <span key={step.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border ${
+                      isDone ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-400' :
+                      isFail ? 'bg-rose-950/30 border-rose-800/40 text-rose-400' :
+                      isCurrent ? 'bg-amber-950/30 border-amber-800/40 text-amber-400' :
+                      'bg-zinc-800/40 border-zinc-700/40 text-zinc-500'
+                    }`}>
+                      {isDone ? '✅' : isFail ? '❌' : isCurrent ? '⏳' : '⏸️'} {step.label}
+                    </span>
+                  );
+                })}
+              </div>
+              {seqState.started_at && !seqRunning && !seqState.finished_at && (
+                <div className="text-[10px] text-zinc-600">Detenido — completó {seqState.completed.length}/10</div>
+              )}
+              {seqState.finished_at && (
+                <div className="text-[10px] text-emerald-500">✅ Secuencia completada: {seqState.completed.length}/10 bots</div>
+              )}
+            </div>
+
+            {/* Output + Cancelar */}
       {(output || runningBot) && (
         <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-3.5 py-2 bg-zinc-850/60 border-b border-zinc-800/40">

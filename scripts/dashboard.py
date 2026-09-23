@@ -132,8 +132,73 @@ BOTS = [
     },
 ]
 
-# Estado de ejecución
-execution_state = {"running": False, "bot_id": None, "output": "", "error": False}
+# ============================================================
+# SECUENCIA DE BOTS (orden lógico de ejecución)
+# ============================================================
+
+SEQUENCE = [
+    {"id": "radar", "label": "Radar"},
+    {"id": "cazador", "label": "Cazador"},
+    {"id": "autodeteccion", "label": "Auto-Detección"},
+    {"id": "contenido", "label": "Contenido"},
+    {"id": "estratega", "label": "Estratega"},
+    {"id": "investigador", "label": "Investigador"},
+    {"id": "outreach", "label": "Outreach (Generar)"},
+    {"id": "outreach_send", "label": "Outreach (Enviar)"},
+    {"id": "reportes", "label": "Reportes"},
+    {"id": "revisor", "label": "Revisor"},
+]
+
+SEQUENCE_STATE_FILE = os.path.join(PROJECT_ROOT, "sequence.json")
+_sequence_stop_flag = threading.Event()
+_sequence_thread = None
+
+def load_sequence_state():
+    try:
+        if os.path.exists(SEQUENCE_STATE_FILE):
+            with open(SEQUENCE_STATE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {"running": False, "current_step": None, "completed": [], "failed": [], "started_at": None, "finished_at": None}
+
+def save_sequence_state(state):
+    try:
+        with open(SEQUENCE_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+def execute_sequence():
+    global _sequence_thread
+    state = load_sequence_state()
+    state["running"] = True
+    state["current_step"] = None
+    state["completed"] = []
+    state["failed"] = []
+    state["started_at"] = datetime.now().isoformat()
+    state["finished_at"] = None
+    save_sequence_state(state)
+    for step in SEQUENCE:
+        if _sequence_stop_flag.is_set():
+            state["running"] = False
+            state["current_step"] = "cancelado"
+            state["finished_at"] = datetime.now().isoformat()
+            save_sequence_state(state)
+            return
+        bot_id = step["id"]
+        state["current_step"] = bot_id
+        save_sequence_state(state)
+        output, error = run_bot(bot_id)
+        if error:
+            state["failed"].append(bot_id)
+        else:
+            state["completed"].append(bot_id)
+        save_sequence_state(state)
+    state["running"] = False
+    state["current_step"] = None
+    state["finished_at"] = datetime.now().isoformat()
+    save_sequence_state(state)
 
 
 # ============================================================
@@ -195,6 +260,8 @@ body {
 }
 .card .status { margin-top: 10px; font-size: 12px; color: #F9B637; display: none; }
 .card.running .status { display: block; }
+.card.completed { border-color: #00C851; background: #1a2e1a; }
+.card.failed { border-color: #FF4444; background: #2e1a1a; }
 .output {
   max-width: 1200px; margin: 30px auto 0;
   background: #0d0d10; border: 1px solid #333; border-radius: 16px;
@@ -206,6 +273,23 @@ body {
 .output .error { color: #FF0000; }
 .output .success { color: #F9B637; }
 .output .info { color: #aaa; }
+/* Secuencia */
+.seq-panel { max-width:1200px; margin:30px auto 0; background:#1e1e22; border:1px solid #F9B637; border-radius:16px; padding:24px; }
+.seq-panel h2 { color:#F9B637; font-size:20px; margin-bottom:16px; }
+.seq-ctrl { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.btn { padding:10px 24px; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
+.btn-start { background:#00C851; color:#000; }
+.btn-start:hover { background:#00a844; }
+.btn-stop { background:#FF0000; color:#fff; }
+.btn-stop:hover { background:#cc0000; }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+.seq-progress { flex:1; min-width:200px; height:8px; background:#333; border-radius:4px; overflow:hidden; }
+.seq-progress-bar { height:100%; background:linear-gradient(90deg,#FF0000,#F9B637); border-radius:4px; transition:width .3s; width:0%; }
+.seq-steps { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.chip { padding:6px 12px; border-radius:8px; font-size:12px; background:#2a2a30; border:1px solid #333; display:flex; align-items:center; gap:6px; }
+.chip.cur { border-color:#F9B637; }
+.chip.done { border-color:#00C851; background:#1a2e1a; }
+.chip.fail { border-color:#FF4444; background:#2e1a1a; }
 .footer { text-align: center; padding: 30px 0 10px; color: #555; font-size: 12px; }
 </style>
 </head>
@@ -214,6 +298,18 @@ body {
   <h1>🔥 Sale Baile — Panel de Bots</h1>
   <p>Ejecutá los bots con un clic — la plataforma #1 de eventos de baile en Buenos Aires</p>
 </div>
+<!-- PANEL DE SECUENCIA -->
+<div class="sequence-panel">
+  <h2>⚡ Secuencia Completa</h2>
+  <div class="sequence-controls">
+    <button class="btn btn-start" id="btn-start-seq" onclick="startSequence()">▶ Iniciar Secuencia</button>
+    <button class="btn btn-stop" id="btn-stop-seq" onclick="stopSequence()" disabled>⏹ Detener</button>
+    <div class="sequence-progress"><div class="sequence-progress-bar" id="seq-progress"></div></div>
+    <span id="seq-status" style="font-size:13px;color:#888">Listo</span>
+  </div>
+  <div class="sequence-steps" id="seq-steps"></div>
+</div>
+
 <div class="grid" id="grid"></div>
 <div class="output" id="output">
   <div class="line info">Seleccioná un bot arriba para empezar. El output aparecerá acá.</div>
@@ -221,6 +317,7 @@ body {
 <div class="footer">Sale Baile • salebaile.web.app • ©2026 Ingeniería JH</div>
 <script>
 const BOTS = __BOTS_JSON__;
+const SEQUENCE = __SEQUENCE_JSON__;
 const grid = document.getElementById('grid');
 const output = document.getElementById('output');
 
@@ -236,6 +333,50 @@ BOTS.forEach(bot => {
   card.onclick = function() { runBot(bot); };
   grid.appendChild(card);
 });
+
+// Secuencia
+function renderSteps() {
+  const c = document.getElementById('seq-steps');
+  c.innerHTML = '';
+  SEQUENCE.forEach(step => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.id = 'step-' + step.id;
+    chip.innerHTML = '⏳ ' + step.label;
+    c.appendChild(chip);
+  });
+}
+renderSteps();
+
+function refreshSequenceUI() {
+  fetch('/api/sequence/status').then(r => r.json()).then(state => {
+    const bs = document.getElementById('btn-start-seq');
+    const bt = document.getElementById('btn-stop-seq');
+    const pr = document.getElementById('seq-progress');
+    const st = document.getElementById('seq-status');
+    if (state.running) { bs.disabled = true; bt.disabled = false; st.textContent = 'Ejecutando...'; st.style.color = '#F9B637'; }
+    else { bs.disabled = false; bt.disabled = true; st.textContent = state.finished_at ? 'Finalizado' : 'Listo'; st.style.color = state.finished_at ? '#00C851' : '#888'; }
+    const total = SEQUENCE.length;
+    const done = state.completed.length;
+    const fail = state.failed.length;
+    const pct = total > 0 ? Math.round(((done + fail) / total) * 100) : 0;
+    pr.style.width = pct + '%';
+    SEQUENCE.forEach(step => {
+      const chip = document.getElementById('step-' + step.id);
+      if (!chip) return;
+      chip.className = 'chip';
+      if (state.current_step === step.id && state.running) { chip.classList.add('cur'); chip.innerHTML = '⏳ ' + step.label; }
+      else if (state.completed.includes(step.id)) { chip.classList.add('done'); chip.innerHTML = '✅ ' + step.label; }
+      else if (state.failed.includes(step.id)) { chip.classList.add('fail'); chip.innerHTML = '❌ ' + step.label; }
+      else { chip.innerHTML = '⏳ ' + step.label; }
+    });
+  });
+}
+
+function startSequence() { fetch('/api/sequence/start', {method:'POST'}).then(r => r.json()).then(data => { if (data.ok) pollSequence(); }); }
+function stopSequence() { fetch('/api/sequence/stop', {method:'POST'}).then(r => r.json()).then(data => { if (data.ok) refreshSequenceUI(); }); }
+function pollSequence() { refreshSequenceUI(); if (document.getElementById('btn-stop-seq').disabled === false) { setTimeout(pollSequence, 2000); } else { refreshSequenceUI(); } }
+setInterval(function() { fetch('/api/sequence/status').then(r => r.json()).then(state => { if (state.running) refreshSequenceUI(); }); }, 3000);
 
 function runBot(bot) {
   if (bot.confirm) {
@@ -273,7 +414,7 @@ function escapeHtml(text) {
 </script>
 </body>
 </html>'''
-    return template.replace("__BOTS_JSON__", bots_json)
+    return template.replace("__BOTS_JSON__", bots_json).replace("__SEQUENCE_JSON__", json.dumps(SEQUENCE))
 
 
 # ============================================================
@@ -368,6 +509,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
 
+        elif self.path == "/api/sequence/status":
+            state = load_sequence_state()
+            body = json.dumps(state).encode("utf-8")
+            self.send_response(200)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
         else:
             body = b'{"error": "not found"}'
             self.send_response(404)
@@ -376,6 +527,40 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+    def do_POST(self):
+        cl = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(cl).decode("utf-8") if cl else "{}"
+        if self.path == "/api/sequence/start":
+            global _sequence_thread, _sequence_stop_flag
+            state = load_sequence_state()
+            if state["running"]:
+                resp = json.dumps({"ok": False, "error": "Secuencia ya en ejecución"}).encode("utf-8")
+                self.send_response(200); self._send_cors_headers()
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers(); self.wfile.write(resp); return
+            _sequence_stop_flag.clear()
+            _sequence_thread = threading.Thread(target=execute_sequence, daemon=True)
+            _sequence_thread.start()
+            resp = json.dumps({"ok": True}).encode("utf-8")
+            self.send_response(200); self._send_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers(); self.wfile.write(resp)
+        elif self.path == "/api/sequence/stop":
+            _sequence_stop_flag.set()
+            resp = json.dumps({"ok": True}).encode("utf-8")
+            self.send_response(200); self._send_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers(); self.wfile.write(resp)
+        else:
+            resp = b'{"error": "not found"}'
+            self.send_response(404); self._send_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers(); self.wfile.write(resp)
 
     def log_message(self, format, *args):
         pass  # Silenciar logs del servidor
