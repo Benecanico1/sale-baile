@@ -28,6 +28,9 @@ from datetime import datetime
 # CONFIGURACIÓN
 # ============================================================
 
+# Cuenta oficial que envía los DMs (Instagram de Sale Baile)
+SALEBAILE_INSTAGRAM = os.environ.get("INSTAGRAM_USERNAME", "@salebaile")
+
 GEMINI_API_KEY = os.environ.get("VITE_GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
 GEMINI_MODEL = "gemini-3.6-flash"
 GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
@@ -185,7 +188,7 @@ def generate_fallback_dm(lead):
     short_handle = handle if len(handle) <= 25 else handle[:22] + "..."
 
     if event_count >= 3:
-        msg = f"¡Hola {short_handle}! Vimos que organizás varios eventos de {style} en BA. Sale Baile es la plataforma gratuita donde podés publicarlos y llegar a más bailarines. ¿Te animás? salebaile.web.app"
+        msg = f"¡Hola {short_handle}! Vimos que organizás varios eventos de {style} en BA. Sale Baile (@salebaile) es la plataforma gratuita donde podés publicarlos y llegar a más bailarines. ¿Te animás? salebaile.web.app"
     else:
         msg = f"¡Hola {short_handle}! Vimos tu evento de {style} en Instagram. En Sale Baile (salebaile.web.app) podés publicarlo gratis y llegar a más bailarines en BA. ¿Te copás?"
 
