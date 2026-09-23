@@ -46,6 +46,16 @@ MONITORED_ACCOUNTS = [
     {"handle": "@ceresitobi",            "name": "Ceresito BI (Morón)",               "category_tag": "salsa"},
 ]
 
+# Instagram cookies para cuenta profesional @salebaile (leer de .env.instagram)
+INSTAGRAM_SESSION = {}
+try:
+    for key in ["INSTAGRAM_SESSION_ID", "INSTAGRAM_SESSION_DATA"]:
+        val = os.environ.get(key, "")
+        if val:
+            INSTAGRAM_SESSION[key.lower().replace("instagram_session_", "")] = val
+except:
+    pass
+
 # Proxies CORS para descargar imágenes de Instagram
 PROXIES = [
     lambda u: f"https://api.allorigins.win/raw?url={urllib.parse.quote(u)}",
