@@ -37,5 +37,6 @@ Una vez configurado `.env.instagram`, los siguientes scripts leerán las cookies
 
 - ✅ `agente_radar.py`: `@salebaile` agregada a `MONITORED_ACCOUNTS`
 - ✅ `agente_contenido.py`: `@salebaile` como cuenta oficial
-- ❌ Envío real de DMs: bloqueado (Apify `instagram-scraper` no acepta `resultsType: "messages"`)
-- 🔧 Solución pendiente: configurar cookies y probar con `python scripts/agente_outreach.py --send`
+- ❌ Envío real de DMs: bloqueado con Apify (actor `instagram-scraper` solo lee datos, `resultsType: "messages"` no válido; error HTTP 402: Payment Required verificado hoy)
+- ✅ Alternativa gratuita verificada hoy: `pip install instagrapi` (v2.4.5 instalada en VPS) — funciona con usuario/contraseña de `@salebaile` para leer/escribir datos de Instagram sin Apify
+- 🔧 Solución pendiente: configurar cookies en `.env.instagram` (ya creado, ya con datos) y probar `python scripts/agente_outreach.py --send`
