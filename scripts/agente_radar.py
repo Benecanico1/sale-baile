@@ -10,6 +10,7 @@ Uso: python agente_radar.py
 
 import urllib.request
 import urllib.parse
+import urllib.error
 import json
 import base64
 import time
@@ -72,7 +73,35 @@ def log(msg, level="INFO"):
     print(f"[{ts}] [{level}] {msg}")
 
 # ============================================================
-# 1. SCRAPER DE INSTAGRAM (Apify)
+# 1.5 SCRAPER INSTAGRAM CON INSTAGRAPI (respaldo gratuito si Apify falla 402)
+# ============================================================
+
+def scrape_instagram_instagrapi(handle, limit=5):
+    try:
+        from instagrapi import Client
+        user = os.environ.get("INSTAGRAM_USERNAME", "salebaile")
+        pw = os.environ.get("INSTAGRAM_PASSWORD", "")
+        cl = Client()
+        cl.login(user, pw)
+        user_id = cl.user_id_from_username(handle.replace("@", "").strip())
+        posts = cl.user_medias(user_id, amount=limit)
+        results = []
+        for p in posts:
+            results.append({
+                "imageUrl": p.thumbnail_url if p.thumbnail_url else p.image_versions2["candidates"][0]["url"],
+                "caption": p.caption_text or "",
+                "likesCount": p.like_count,
+                "author": handle,
+                "timestamp": p.created_at_utc.isoformat() if hasattr(p.created_at_utc, 'isoformat') else str(p.created_at_utc),
+            })
+        log(f"  ✅ instagrapi: {len(results)} posts de {handle}")
+        return results
+    except Exception as e:
+        log(f"  ⚠️ instagrapi falló para {handle}: {e}")
+        return None
+
+# ============================================================
+# 2. SCRAPER DE INSTAGRAM (Apify)
 # ============================================================
 
 def scrape_instagram(handle):
@@ -90,12 +119,22 @@ def scrape_instagram(handle):
     req = urllib.request.Request(actor_url, data=payload, method="POST")
     req.add_header("Content-Type", "application/json")
     
-    resp = urllib.request.urlopen(req, timeout=90)
-    posts = json.loads(resp.read())
-    
+    try:
+        resp = urllib.request.urlopen(req, timeout=90)
+        posts = json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        # Si Apify da 402 (token agotado/vencido), usar respaldo gratuito: instagrapi
+        if e.code == 402:
+            log(f"  ⚠️ Apify 402 ({handle}) — usando respaldo instagrapi (cuenta @salebaile)")
+            posts = scrape_instagram_instagrapi(handle, limit=5)
+            if posts:
+                return posts
+        log(f"  ❌ Error scrapeando {handle}: HTTP {e.code}")
+        return []
+
     if not isinstance(posts, list) or len(posts) == 0:
         return []
-    
+
     return posts
 
 # ============================================================
