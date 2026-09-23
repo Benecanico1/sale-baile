@@ -18,6 +18,12 @@ dist-ssr
 .idea
 .DS_Store
 *.suo
+
+# Instagram cookies / session (nunca subir a GitHub)
+.env.instagram
+.env.whatsapp
+.env
+!env.example
 *.ntvs*
 *.njsproj
 *.sln
