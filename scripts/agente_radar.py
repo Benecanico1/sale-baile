@@ -57,6 +57,17 @@ try:
 except:
     pass
 
+# Headers actuales de Instagram para instagrapi v2.4.5 (compatibles con @salebaile profesional)
+INSTAGRAM_HEADERS = {
+    "user-agent": "Instagram 305.0.0.19.112 (iPhone; iOS 15_0; en_US; en-US; scale=2.00; 750x1334) AppleWebKit/605.1.15",
+    "x-ig-app-id": "936619743392459",
+    "x-ig-device-id": "A-" + os.environ.get("INSTAGRAM_USERNAME", "salebaile"),
+    "x-ig-capabilities": "3brTrw==",
+    "accept-language": "en-US,en;q=0.9",
+    "accept-encoding": "gzip, deflate, br",
+    "x-requested-with": "XMLHttpRequest",
+}
+
 # Proxies CORS para descargar imágenes de Instagram
 PROXIES = [
     lambda u: f"https://api.allorigins.win/raw?url={urllib.parse.quote(u)}",
