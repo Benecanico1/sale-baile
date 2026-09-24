@@ -22,6 +22,7 @@ import json
 import time
 import os
 import sys
+import random
 from datetime import datetime
 
 # ============================================================
@@ -29,6 +30,10 @@ from datetime import datetime
 # ============================================================
 
 # Cuenta oficial que envía los DMs (Instagram de Sale Baile)
+# ⚠ NOTA: Para que los DMs queden en la cuenta real (@salebaile) se debe usar instagrapi o la Instagram Graph API (Business). Apify es un scraper externo y NO garantiza el registro nativo en la app oficial.
+DAILY_LIMIT = int(os.environ.get("OUTREACH_DAILY_LIMIT", "15"))  # límite diario seguro
+JITTER_MIN = 180  # 3 minutos
+JITTER_MAX = 420  # 7 minutos
 SALEBAILE_INSTAGRAM = os.environ.get("INSTAGRAM_USERNAME", "@salebaile")
 
 GEMINI_API_KEY = os.environ.get("VITE_GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
@@ -42,9 +47,18 @@ FIREBASE_LEADS_URL = f"{FIREBASE_BASE}/leads.json"
 # LOG
 # ============================================================
 
+LOG_FILE = os.environ.get("OUTREACH_LOG_FILE", "agente_outreach_log.txt")
+
 def log(msg, level="INFO"):
-    ts = datetime.now().strftime("%H:%M:%S")
-    print(f"[{ts}] [{level}] {msg}")
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{ts}] [{level}] {msg}"
+    print(line)
+    # Datalogger paso a paso en archivo
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception as e:
+        print(f"[{ts}] [ERROR] Fallo escribiendo log: {e}")
 
 # ============================================================
 # 1. LEER LEADS DE FIREBASE
@@ -240,6 +254,7 @@ def send_instagram_dm(handle, message):
 
     Requiere: VITE_APIFY_TOKEN en .env
     """
+    # ⚠ Este método usa Apify (scraper externo). Para DMs nativos en @salebaile cambiar por instagrapi.Client().direct_send().
     token = os.environ.get("VITE_APIFY_TOKEN", os.environ.get("APIFY_TOKEN", ""))
     if not token:
         log("FALTA VITE_APIFY_TOKEN — no se puede enviar DM por Instagram", "ERROR")
@@ -307,6 +322,12 @@ def run(send_mode=False, max_leads=None):
 
     # Filtrar organizadores ya en el grupo
     filtered_leads = {}
+    # Control de límite diario antes del loop de envíos reales
+    remaining = DAILY_LIMIT - sent_count
+    if send_mode and len(new_leads) > remaining:
+        log(f"Limitando envíos restantes hoy: {remaining}", "WARN")
+        new_leads = dict(list(new_leads.items())[:remaining])
+
     for key, lead in new_leads.items():
         handle = lead.get('handle', '')
         if is_already_in_group(handle):
@@ -324,12 +345,23 @@ def run(send_mode=False, max_leads=None):
         new_leads = dict(list(new_leads.items())[:max_leads])
         log(f"Limitando a {max_leads} leads (modo --limit)")
 
+    # Protección antiban: límite diario y jitter
+    if send_mode and sent_count >= DAILY_LIMIT:
+        log(f"⛔ LÍMITE DIARIO ALCANZADO ({DAILY_LIMIT}). Se detiene el envío.", "WARN")
+        return
+
     # 2. Generar mensajes
     log("Paso 2: Generando mensajes de DM personalizados...")
     results = []
     batch = 0
     sent_count = 0
     failed_count = 0
+
+    # Control de límite diario antes del loop de envíos reales
+    remaining = DAILY_LIMIT - sent_count
+    if send_mode and len(new_leads) > remaining:
+        log(f"Limitando envíos restantes hoy: {remaining}", "WARN")
+        new_leads = dict(list(new_leads.items())[:remaining])
 
     for key, lead in new_leads.items():
         batch += 1
@@ -367,7 +399,9 @@ def run(send_mode=False, max_leads=None):
                 dm_status = f"fallo: {detail}"
                 failed_count += 1
                 log(f"    ❌ Error: {detail}", "WARN")
-            time.sleep(3)  # Rate limiting entre envíos
+            wait_sec = random.randint(JITTER_MIN, JITTER_MAX)
+            log(f"    ⏳ Pausa aleatoria antiban: {wait_sec}s ({wait_sec//60}m {wait_sec%60}s)...", "INFO")
+            time.sleep(wait_sec)
 
         # Guardar mensaje + borrar si fue enviado
         if send_mode:
