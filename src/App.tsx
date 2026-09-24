@@ -482,6 +482,7 @@ const MainAppContent: React.FC = () => {
           <MapView
             events={events}
             onSelectEvent={setSelectedEvent}
+            isMinimized={!!selectedEvent}
           />
         )}
 

@@ -5,7 +5,7 @@ import { useFilters } from '../../context/FilterContext';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useAuth } from '../../context/AuthContext';
 import { calculateHaversineDistance, formatDistance } from '../../lib/geo';
-import { isEventExpired, isEventFinished, isThisWeekend, parseISODate, formatEventSchedule } from '../../lib/dateUtils';
+import { isThisWeekend, parseISODate, formatEventSchedule } from '../../lib/dateUtils';
 import { preloadImages, getOptimizedImageUrl } from '../../lib/imageOptimizer';
 import {
   Search,
@@ -114,8 +114,8 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
       .filter((evt) => {
         if (evt.status !== 'publicado' || evt.is_cancelled) return false;
         if (!evt.flyer_url || !evt.flyer_url.trim()) return false;
-        // Si no es clase recurrente semanal y ya finalizó, no mostrar
-        if (!evt.is_recurring_weekly && (isEventFinished(evt.end_time) || isEventExpired(evt.end_time))) return false;
+        // Si no es clase recurrente semanal y ya finalizó, no mostrar (DESACTIVADO temporalmente para que se vean)
+        // if (!evt.is_recurring_weekly && (isEventFinished(evt.end_time) || isEventExpired(evt.end_time))) return false;
         return true;
       })
       .map((evt) => {
@@ -421,21 +421,21 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               {/* Grilla sutil oscura */}
               <div className="absolute inset-0 bg-[radial-gradient(#1e2230_1px,transparent_1px)] [background-size:16px_16px] opacity-60" />
               
-              {/* Anillos concéntricos de Radar */}
+              {/* Anillos concéntricos de Radar centrados */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-48 h-48 rounded-full border border-dance-crimson/15" />
-                <div className="w-32 h-32 rounded-full border border-dance-coral/25" />
-                <div className="w-16 h-16 rounded-full border border-dance-crimson/35" />
-                {/* Haz giratorio de radar */}
-                <div
-                  className="absolute w-48 h-48 rounded-full animate-spin"
-                  style={{
-                    animationDuration: '6s',
-                    background: 'conic-gradient(from 0deg at 50% 50%, rgba(255, 45, 85, 0.28) 0deg, transparent 60deg, transparent 360deg)',
-                  }}
-                />
-                {/* Centro del usuario */}
-                <div className="w-3 h-3 rounded-full bg-dance-coral shadow-[0_0_12px_#ff5500] border border-white z-10 animate-pulse" />
+                <div className="relative w-48 h-48" style={{ position: 'relative' }}>
+                  <div className="absolute top-0 left-0 w-full h-full rounded-full border border-dance-crimson/15" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border border-dance-coral/25" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-dance-crimson/35" />
+                  <div
+                    className="absolute top-0 left-0 w-full h-full rounded-full animate-spin"
+                    style={{
+                      animationDuration: '6s',
+                      background: 'conic-gradient(from 0deg at 50% 50%, rgba(255, 45, 85, 0.28) 0deg, transparent 60deg, transparent 360deg)',
+                    }}
+                  />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-dance-coral shadow-[0_0_12px_#ff5500] border border-white z-10 animate-pulse" />
+                </div>
               </div>
 
               {/* Puntos de eventos reales en el radar */}

@@ -465,7 +465,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {/* Menú de navegación — tabs estilo underline */}
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-zinc-800/50 pb-px -mb-px">
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-zinc-800/50 pb-px -mb-px flex-wrap">
         {([
           { id: 'pending' as const, label: 'Solicitudes', icon: <Clock className="w-3.5 h-3.5" />, count: pendingOrganizers.length + pendingEvents.length },
           { id: 'tickets' as const, label: 'Ventas', icon: <DollarSign className="w-3.5 h-3.5" />, count: ticketStats.pendingOrdersCount > 0 ? ticketStats.pendingOrdersCount : undefined },

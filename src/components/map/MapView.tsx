@@ -9,6 +9,7 @@ import { MapPin, Calendar } from 'lucide-react';
 interface MapViewProps {
   events: EventItem[];
   onSelectEvent?: (event: EventItem) => void;
+  isMinimized?: boolean;
 }
 
 const createRadarMarkerIcon = (evt: EventItem) => {
@@ -32,13 +33,13 @@ const createRadarMarkerIcon = (evt: EventItem) => {
   return L.divIcon({ className: 'radar-map-pin', html, iconSize: [0, 0], iconAnchor: [0, 0], popupAnchor: [0, -78] });
 };
 
-export const MapView: React.FC<MapViewProps> = ({ events, onSelectEvent }) => {
+export const MapView: React.FC<MapViewProps> = ({ events, onSelectEvent, isMinimized }) => {
   const [mapCenter] = useState<{ lat: number; lng: number }>({ lat: -34.6037, lng: -58.3816 });
   const visibleEvents = useMemo(() => events.filter((evt) => evt.status === 'publicado' && !evt.is_cancelled && evt.flyer_url && evt.latitude && evt.longitude), [events]);
   const MapController: React.FC<{ center: [number, number] }> = ({ center }) => { const map = useMap(); React.useEffect(() => { map.setView(center, 13); }, [center, map]); return null; };
   return (
     <div className="w-full rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#07070a]">
-      <MapContainer center={[mapCenter.lat, mapCenter.lng]} zoom={13} scrollWheelZoom={true} style={{ height: 420, width: '100%', background: '#07070a' }}>
+      <MapContainer center={[mapCenter.lat, mapCenter.lng]} zoom={13} scrollWheelZoom={true} style={{ height: isMinimized ? 100 : 420, width: '100%', background: '#07070a' }}>
         <TileLayer url={`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${import.meta.env.VITE_CARTO_API_KEY || ''}`} subdomains="abcd" maxZoom={20} />
         <MapController center={[mapCenter.lat, mapCenter.lng]} />
         {visibleEvents.map((evt) => (
