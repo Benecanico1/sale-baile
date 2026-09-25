@@ -1,15 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   Bot,
-  Radar,
   Target,
-  Send,
-  FileText,
-  Search,
-  PenTool,
-  TrendingUp,
-  Microscope,
-  Bug,
   Loader2,
   CheckCircle,
   XCircle,
@@ -33,6 +25,7 @@ interface BotConfig {
 
 const BOTS: BotConfig[] = [
   { id: 'cazador_legs', name: 'Cazador de Legs', desc: 'Regla: legs de BA + CABA | Solo eventos salsa y bachata', icon: <Target className="w-4 h-4" />, confirm: false },
+  { id: 'borrar_legs', name: 'Borrar Legs', desc: 'Eliminar leads recavados (empezar de cero)', icon: <X className="w-4 h-4" />, confirm: true },
 ];
 
 const DASHBOARD_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -109,12 +102,19 @@ export const BotsPanel: React.FC = () => {
     setHasError(false);
 
     try {
-      const resp = await fetch(`${DASHBOARD_URL}/run?id=${bot.id}`, {
-        signal: controller.signal,
-      });
-      const data = await resp.json();
-      setOutput(data.output || 'Sin output');
-      setHasError(data.error || false);
+      if (bot.id === 'borrar_legs') {
+        const resp = await fetch(`${DASHBOARD_URL}/borrar-legs`, { method: 'POST', signal: controller.signal });
+        const data = await resp.json();
+        setOutput(data.ok ? '✅ Leads borrados. Empezamos de cero.' : `❌ Error: ${data.error || 'desconocido'}`);
+        setHasError(!data.ok);
+      } else {
+        const resp = await fetch(`${DASHBOARD_URL}/run?id=${bot.id}`, {
+          signal: controller.signal,
+        });
+        const data = await resp.json();
+        setOutput(data.output || 'Sin output');
+        setHasError(data.error || false);
+      }
     } catch (err: any) {
       if (err.name === 'AbortError') {
         setOutput((prev) => prev + '\n\n⏹️ Cancelado.');

@@ -516,6 +516,19 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(resp)))
             self.end_headers(); self.wfile.write(resp)
+        elif self.path == "/borrar-legs":
+            import urllib.request
+            url = "https://openclaw-nyj-ia-web-ddb56-default-rtdb.firebaseio.com/sale_baile/leads.json"
+            try:
+                req = urllib.request.Request(url, data=b"null", method="PUT", headers={"Content-Type":"application/json"})
+                urllib.request.urlopen(req, timeout=15)
+                resp = json.dumps({"ok": True, "message": "Leads borrados"}).encode()
+            except Exception as e:
+                resp = json.dumps({"ok": False, "error": str(e)}).encode()
+            self.send_response(200); self._send_cors_headers()
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers(); self.wfile.write(resp); return
         else:
             resp = b'{"error": "not found"}'
             self.send_response(404); self._send_cors_headers()
