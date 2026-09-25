@@ -10,6 +10,7 @@ import { LightboxModal } from './LightboxModal';
 import { EventMediaCarousel } from './EventMediaCarousel';
 import { ShareModal } from './ShareModal';
 import { ReportModal } from './ReportModal';
+import { AdvanceTicketCTA } from './AdvanceTicketCTA';
 import {
   Calendar,
   Clock,
@@ -99,6 +100,13 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   // 2. Detección de venta de entradas anticipadas (solo se cobra si hay anticipada)
   const hasAdvanceTicket = !isTeacherClass && !event.is_free && Boolean(event.advance_ticket_price && event.advance_ticket_price > 0);
   const teacherWhatsapp = (event.organizer_whatsapp || ticketsWhatsapp || '5491158589088').replace(/\D/g, '');
+
+  // Deadline de anticipada (null si es clase recurrente sin caducidad)
+  const advanceDeadline = (!event.is_recurring_weekly && event.advance_sales_end_date)
+    ? new Date(`${event.advance_sales_end_date}T${event.advance_sales_end_time || '23:59'}:00`).getTime()
+    : null;
+  const advanceEnd = advanceDeadline && !isNaN(advanceDeadline) ? advanceDeadline : null;
+  const viaWhatsapp = Boolean(event.advance_tickets_whatsapp);
 
   return (
     <>
@@ -273,32 +281,17 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
               </a>
             </div>
 
-            {/* Botón Comprar Entrada Anticipada (solo activo si hay anticipada) */}
-            {hasAdvanceTicket && !isAdvanceExpired && onOpenBuyTicketModal && (
-              <button
-                type="button"
-                onClick={() => onOpenBuyTicketModal(event)}
-                className="w-full p-4 bg-gradient-to-r from-[#ff5500] via-[#e11d48] to-[#f43f5e] hover:opacity-95 text-white font-black rounded-2xl flex items-center justify-between shadow-glow-crimson transition-all cursor-pointer group active:scale-[0.99] border border-white/20"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-black/25 flex items-center justify-center shrink-0">
-                    <Ticket className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-left">
-                    <span className="block text-base sm:text-lg font-black tracking-wide leading-tight">
-                      Comprar Entrada Anticipada
-                    </span>
-                    <span className="text-[11px] text-white/90 font-semibold block mt-0.5">
-                      Pase Digital QR Inmediato {event.price ? `• En puerta: $${event.price.toLocaleString('es-AR')}` : ''}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="px-4 py-2 rounded-xl bg-black/35 backdrop-blur-sm text-white font-black text-base sm:text-lg border border-white/20 shrink-0 shadow-lg">
-                  ${(event.advance_ticket_price || 0).toLocaleString('es-AR')}
-                </div>
-              </button>
-            )}
+            {/* CTA de venta anticipada: urgencia + countdown + rama WhatsApp (debajo de "Cómo llegar") */}
+            <AdvanceTicketCTA
+              advancePrice={event.advance_ticket_price || 0}
+              doorPrice={event.price}
+              hasAdvanceTicket={hasAdvanceTicket}
+              isAdvanceExpired={isAdvanceExpired}
+              advanceEnd={advanceEnd}
+              viaWhatsapp={viaWhatsapp}
+              whatsappNumber={event.advance_tickets_whatsapp}
+              onBuy={onOpenBuyTicketModal ? () => onOpenBuyTicketModal(event) : undefined}
+            />
 
             {/* Organizador del Evento con botón Seguir */}
             {event.organizer_name && (
