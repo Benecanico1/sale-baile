@@ -273,6 +273,33 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
               </a>
             </div>
 
+            {/* Botón Comprar Entrada Anticipada (solo activo si hay anticipada) */}
+            {hasAdvanceTicket && !isAdvanceExpired && onOpenBuyTicketModal && (
+              <button
+                type="button"
+                onClick={() => onOpenBuyTicketModal(event)}
+                className="w-full p-4 bg-gradient-to-r from-[#ff5500] via-[#e11d48] to-[#f43f5e] hover:opacity-95 text-white font-black rounded-2xl flex items-center justify-between shadow-glow-crimson transition-all cursor-pointer group active:scale-[0.99] border border-white/20"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-black/25 flex items-center justify-center shrink-0">
+                    <Ticket className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-base sm:text-lg font-black tracking-wide leading-tight">
+                      Comprar Entrada Anticipada
+                    </span>
+                    <span className="text-[11px] text-white/90 font-semibold block mt-0.5">
+                      Pase Digital QR Inmediato {event.price ? `• En puerta: $${event.price.toLocaleString('es-AR')}` : ''}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="px-4 py-2 rounded-xl bg-black/35 backdrop-blur-sm text-white font-black text-base sm:text-lg border border-white/20 shrink-0 shadow-lg">
+                  ${(event.advance_ticket_price || 0).toLocaleString('es-AR')}
+                </div>
+              </button>
+            )}
+
             {/* Organizador del Evento con botón Seguir */}
             {event.organizer_name && (
               <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/5 border border-white/10 shadow-sm">
@@ -440,32 +467,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                 </button>
               )
             ) : hasAdvanceTicket && !isAdvanceExpired ? (
-              /* CASO 3: Entrada Anticipada con Mejor Vista y Gradiente Neón */
-              onOpenBuyTicketModal && (
-                <button
-                  type="button"
-                  onClick={() => onOpenBuyTicketModal(event)}
-                  className="w-full p-4 bg-gradient-to-r from-[#ff5500] via-[#e11d48] to-[#f43f5e] hover:opacity-95 text-white font-black rounded-2xl flex items-center justify-between shadow-glow-crimson transition-all cursor-pointer group active:scale-[0.99] border border-white/20"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-xl bg-black/25 flex items-center justify-center shrink-0">
-                      <Ticket className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="text-left">
-                      <span className="block text-base sm:text-lg font-black tracking-wide leading-tight">
-                        Comprar Entrada Anticipada
-                      </span>
-                      <span className="text-[11px] text-white/90 font-semibold block mt-0.5">
-                        Pase Digital QR Inmediato {event.price ? `• En puerta: $${event.price.toLocaleString('es-AR')}` : ''}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="px-4 py-2 rounded-xl bg-black/35 backdrop-blur-sm text-white font-black text-base sm:text-lg border border-white/20 shrink-0 shadow-lg">
-                    ${(event.advance_ticket_price || 0).toLocaleString('es-AR')}
-                  </div>
-                </button>
-              )
+              /* CASO 3: botón "Comprar Entrada Anticipada" movido debajo de "Cómo llegar" */
+              null
             ) : isAdvanceExpired ? (
               /* CASO 4: Venta anticipada finalizada */
               <div className="w-full p-4 bg-oled-900/90 border border-amber-500/40 rounded-2xl space-y-1.5 text-center shadow-lg">
