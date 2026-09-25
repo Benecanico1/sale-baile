@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from '../../context/LocationContext';
 import { useAuth, isAdminEmail } from '../../context/AuthContext';
-import { Shield, ChevronDown, Radar, Sparkles, ArrowDownToLine } from 'lucide-react';
+import { Shield, ChevronDown, Radar, Sparkles, ArrowDownToLine, Info } from 'lucide-react';
 
 interface NavbarProps {
   currentTab: string;
@@ -23,11 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isUserAdmin = Boolean(role === 'admin' || (user?.email && isAdminEmail(user.email)));
 
   const handleLogoClick = () => {
-    if (onOpenAboutModal) {
-      onOpenAboutModal();
-    } else {
-      setCurrentTab('explore');
-    }
+    setCurrentTab('explore');
   };
 
   const handleDownloadClick = () => {
@@ -194,8 +190,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="relative inline-flex rounded-full h-2 w-2 bg-dance-crimson"></span>
             </span>
           </button>
-
-          {/* Usuario: Si no está logueado botón Ingresar, si está logueado SOLO LA FOTO (sin nombre) */}
+          {/* Botón de Información sobre SaleBaile */}
+          {onOpenAboutModal && (
+            <button
+              type="button"
+              onClick={onOpenAboutModal}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-oled-900 hover:bg-oled-850 border border-white/10 hover:border-dance-coral/50 flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer shrink-0"
+              title="Acerca de Sale Baile"
+              aria-label="Acerca de Sale Baile"
+            >
+              <Info className="w-4 h-4 text-dance-coral" />
+            </button>
+          )}          {/* Usuario: Si no está logueado botón Ingresar, si está logueado SOLO LA FOTO (sin nombre) */}
           {!user ? (
             <button
               onClick={() => {

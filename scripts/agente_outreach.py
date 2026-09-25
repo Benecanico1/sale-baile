@@ -30,7 +30,7 @@ from datetime import datetime
 # ============================================================
 
 # Cuenta oficial que envía los DMs (Instagram de Sale Baile)
-# ⚠ NOTA: Para que los DMs queden en la cuenta real (@salebaile) se debe usar instagrapi o la Instagram Graph API (Business). Apify es un scraper externo y NO garantiza el registro nativo en la app oficial.
+# ⚠ NOTA: Para que los DMs queden en la cuenta real (@salebaile) se debe usar instagrapi o la Instagram Graph API (Business).  es un scraper externo y NO garantiza el registro nativo en la app oficial.
 DAILY_LIMIT = int(os.environ.get("OUTREACH_DAILY_LIMIT", "15"))  # límite diario seguro
 JITTER_MIN = 180  # 3 minutos
 JITTER_MAX = 420  # 7 minutos
@@ -42,6 +42,7 @@ GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{GEM
 
 FIREBASE_BASE = "https://openclaw-nyj-ia-web-ddb56-default-rtdb.firebaseio.com/sale_baile"
 FIREBASE_LEADS_URL = f"{FIREBASE_BASE}/leads.json"
+FIREBASE_DM_LOG_URL = f"{FIREBASE_BASE}/dm_log.json"
 
 # ============================================================
 # LOG
@@ -76,6 +77,35 @@ def load_leads():
         log(f"Error leyendo leads de Firebase: {e}", "ERROR")
         return {}
 
+
+def load_dm_log():
+    try:
+        resp = urllib.request.urlopen(FIREBASE_DM_LOG_URL, timeout=10)
+        data = json.loads(resp.read())
+        if isinstance(data, dict): return data
+        return {}
+    except: return {}
+
+def is_already_sent_today(handle):
+    clean = handle.replace("@", "").strip()
+    log_data = load_dm_log()
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    for key, entry in log_data.items():
+        h = (entry.get("handle", "") or "").replace("@", "").strip()
+        if h == clean:
+            sent_at = entry.get("sent_at", "")
+            if sent_at.startswith(today_str): return True
+    return False
+
+def log_dm_sent(handle, message, status="enviado"):
+    url = f"{FIREBASE_BASE}/dm_log/{handle.replace('@','').replace('.','')}.json"
+    payload = json.dumps({"handle": handle, "message": message, "sent_at": datetime.now().isoformat(), "status": status, "channel": ""}).encode()
+    req = urllib.request.Request(url, data=payload, method="PUT")
+    req.add_header("Content-Type", "application/json")
+    try:
+        urllib.request.urlopen(req, timeout=15)
+    except Exception as e:
+        log(f"Error guardando log DM {handle}: {e}", "WARN")
 
 def load_new_leads():
     """Lee los leads con status 'new' de Firebase."""
@@ -243,28 +273,28 @@ def delete_lead_from_firebase(key):
 
 
 # ============================================================
-# 3b. ENVIAR DM POR INSTAGRAM (Apify)
+# 3b. ENVIAR DM POR INSTAGRAM ()
 # ============================================================
 
 def send_instagram_dm(handle, message):
-    """Envía un DM por Instagram usando Apify Instagram Scraper.
+    """Envía un DM por Instagram usando  Instagram Scraper.
 
-    Usa el actor 'apify/instagram-scraper' con el metodo 'message'
+    Usa el actor '/instagram-scraper' con el metodo 'message'
     para enviar un DM directo al organizador.
 
-    Requiere: VITE_APIFY_TOKEN en .env
+    Requiere:  en .env
     """
-    # ⚠ Este método usa Apify (scraper externo). Para DMs nativos en @salebaile cambiar por instagrapi.Client().direct_send().
-    token = os.environ.get("VITE_APIFY_TOKEN", os.environ.get("APIFY_TOKEN", ""))
+    # ⚠ Este método usa  (scraper externo). Para DMs nativos en @salebaile cambiar por instagrapi.Client().direct_send().
+    token = os.environ.get("", os.environ.get("APIFY_TOKEN", ""))
     if not token:
-        log("FALTA VITE_APIFY_TOKEN — no se puede enviar DM por Instagram", "ERROR")
-        return False, "Falta token de Apify"
+        log("FALTA  — no se puede enviar DM por Instagram", "ERROR")
+        return False, "Falta token de "
 
     clean_handle = handle.replace("@", "").strip()
     profile_url = f"https://www.instagram.com/{clean_handle}/"
 
-    # Usar el actor de Apify para enviar DM
-    actor_url = f"https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token={token}"
+    # Usar el actor de  para enviar DM
+    actor_url = f"https://api..com/v2/acts/~instagram-scraper/run-sync-get-dataset-items?token={token}"
     payload = json.dumps({
         "directUrls": [profile_url],
         "resultsType": "messages",
@@ -299,11 +329,11 @@ def send_instagram_dm(handle, message):
 # 4. PIPELINE PRINCIPAL
 # ============================================================
 
-def run(send_mode=False, max_leads=None):
+def run(send_mode=False, max_leads=None, handle=None, message=None):
     log("=== BOT DE OUTREACH — SALE BAILE ===")
     log(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     if send_mode:
-        log("MODO: ENVÍO REAL DE DM POR INSTAGRAM (Apify)")
+        log("MODO: ENVÍO REAL DE DM POR INSTAGRAM ()")
     else:
         log("MODO: Solo generar y guardar (usar --send para enviar DMs reales)")
     log("")
@@ -311,8 +341,8 @@ def run(send_mode=False, max_leads=None):
     if not GEMINI_API_KEY:
         log("FALTA VITE_GEMINI_API_KEY — usando mensajes de fallback (plantillas)", "WARN")
 
-    if send_mode and not os.environ.get("VITE_APIFY_TOKEN"):
-        log("FALTA VITE_APIFY_TOKEN — no se pueden enviar DMs sin token de Apify", "ERROR")
+    if send_mode and not os.environ.get(""):
+        log("FALTA  — no se pueden enviar DMs sin token de ", "ERROR")
         send_mode = False
 
     # 1. Leer leads nuevos de Firebase
@@ -336,6 +366,43 @@ def run(send_mode=False, max_leads=None):
             filtered_leads[key] = lead
     new_leads = filtered_leads
     log(f'Leads disponibles (sin grupo): {len(new_leads)}')
+
+    if handle and message:
+        log(f"Modo PRUEBA MANUAL: DM a {handle}")
+        temp_lead = {
+            "handle": handle,
+            "full_name": handle,
+            "avatar_url": "",
+            "followers": 0,
+            "bio": "",
+            "external_url": "",
+            "is_business": False,
+            "event_posts_count": 0,
+            "total_likes": 0,
+            "total_comments": 0,
+            "avg_likes_per_post": 0,
+            "score": 50,
+            "dance_style": "baile",
+            "event_type": "general",
+            "location_mentioned": "",
+            "gemini_reasoning": "Prueba manual",
+            "sample_caption": "",
+            "status": "new",
+            "detected_at": datetime.now().isoformat(),
+            "last_contacted_at": None,
+            "notes": "",
+        }
+        result = generate_dm_message(temp_lead)
+        if not result:
+            result = message
+        if send_mode:
+            log(f"    📤 Enviando DM de prueba a {handle}...")
+            success, detail = send_instagram_dm(handle, result)
+            log(f"    {'✅ Enviado!' if success else '❌ Fallo: ' + detail}")
+            return
+        else:
+            log(f"    💬 DM generado (modo prueba): {result}")
+            return
 
     if not new_leads:
         log("No hay leads nuevos. Ejecutá agente_cazador.py primero.", "WARN")
@@ -364,8 +431,12 @@ def run(send_mode=False, max_leads=None):
         new_leads = dict(list(new_leads.items())[:remaining])
 
     for key, lead in new_leads.items():
-        batch += 1
         handle = lead.get("handle", "?")
+        # DEDUP DIARIA: saltar si ya se envió hoy
+        if is_already_sent_today(handle):
+            log(f"  ⏭ {handle} — DM ya enviado hoy, saltando (dedup)")
+            continue
+        batch += 1
         score = lead.get("score", 0)
         event_count = lead.get("event_posts_count", 0)
 
@@ -409,6 +480,7 @@ def run(send_mode=False, max_leads=None):
                 # Borrar lead de Firebase después de enviar el DM
                 delete_lead_from_firebase(key)
                 save_organizer(handle)
+                log_dm_sent(handle, message, status="enviado")
                 log(f"    ✓ {len(message)} chars → enviado y borrado")
             else:
                 # Falló: mantener como "new" para reintentar después
@@ -469,6 +541,21 @@ def run(send_mode=False, max_leads=None):
         log("    Para enviar DMs reales por Instagram: python scripts/agente_outreach.py --send")
     log("=" * 70)
 
+    try:
+        stats = {
+            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "leads_nuevos": len(new_leads) if 'new_leads' in locals() else len(results),
+            "mensajes_creados": len(results),
+            "enviados": sent_count if send_mode else 0,
+            "fallidos": failed_count if send_mode else 0,
+            "saltados_por_dedup": 0
+        }
+        with open("reporte_outreach.json", "w", encoding="utf-8") as f:
+            json.dump(stats, f, indent=2, ensure_ascii=False)
+        log("📄 Estadísticas guardadas en reporte_outreach.json")
+    except Exception as e:
+        log(f"Error guardando reporte: {e}", "WARN")
+
 
 # ============================================================
 # MAIN
@@ -477,8 +564,18 @@ def run(send_mode=False, max_leads=None):
 if __name__ == "__main__":
     send_mode = "--send" in sys.argv
     max_leads = None
+    handle = None
+    message = None
     if "--limit" in sys.argv:
         idx = sys.argv.index("--limit")
         if idx + 1 < len(sys.argv):
             max_leads = int(sys.argv[idx + 1])
-    run(send_mode=send_mode, max_leads=max_leads)
+    if "--handle" in sys.argv:
+        idx = sys.argv.index("--handle")
+        if idx + 1 < len(sys.argv):
+            handle = sys.argv[idx + 1]
+    if "--message" in sys.argv:
+        idx = sys.argv.index("--message")
+        if idx + 1 < len(sys.argv):
+            message = sys.argv[idx + 1]
+    run(send_mode=send_mode, max_leads=max_leads, handle=handle, message=message)

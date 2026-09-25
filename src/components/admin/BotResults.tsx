@@ -32,7 +32,7 @@ import {
   type BotDraft,
 } from '../../lib/botResults';
 
-type SubTab = 'leads' | 'events' | 'drafts' | 'reports';
+type SubTab = 'leads' | 'events' | 'drafts' | 'reports' | 'dm_created' | 'dm_sent' | 'dm_failed' | 'leads_new';
 
 const dmStatusLabel = (status?: string) => {
   switch (status) {
@@ -64,6 +64,11 @@ export const BotResults: React.FC = () => {
   const [drafts, setDrafts] = useState<Record<string, BotDraft>>({});
   const [leadFilter, setLeadFilter] = useState<'all' | 'new' | 'contacted'>('all');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [testHandle, setTestHandle] = useState('');
+  const [testMessage, setTestMessage] = useState('');
+  const [testStatus, setTestStatus] = useState('');
+
+  const [auditTab, setAuditTab] = useState<SubTab | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -91,6 +96,9 @@ export const BotResults: React.FC = () => {
   const sortedLeads = [...filteredLeads].sort((a, b) => b.score - a.score);
   const newLeadsCount = leadList.filter((l) => l.status === 'new').length;
   const contactedLeadsCount = leadList.filter((l) => l.status === 'contacted').length;
+  const createdDMs = leadList.filter((l: any) => Boolean(l.dm_message || l.generated_dm)).length;
+  const sentDMs = leadList.filter((l: any) => l.dm_status === 'sent' || l.status === 'contacted').length;
+  const failedDMs = leadList.filter((l: any) => l.dm_status === 'failed').length;
   const reportList = Object.entries(reports).map(([k, v]) => ({ key: k, ...v }));
   const draftList = Object.entries(drafts).map(([k, v]) => ({ key: k, ...v }));
 
@@ -129,21 +137,187 @@ export const BotResults: React.FC = () => {
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: 'Leads', value: leadList.length, sub: `${newLeadsCount} nuevos`, icon: <Target className="w-3.5 h-3.5" /> },
-          { label: 'Eventos', value: events.length, sub: 'en Firebase', icon: <Calendar className="w-3.5 h-3.5" /> },
-          { label: 'Borradores', value: draftList.length, sub: 'auto-detect', icon: <Search className="w-3.5 h-3.5" /> },
-          { label: 'Reportes', value: reportList.length, sub: 'semanales', icon: <FileText className="w-3.5 h-3.5" /> },
+          { label: 'Leads', value: leadList.length, sub: `${newLeadsCount} nuevos`, icon: <Target className="w-3.5 h-3.5" />, tab: 'leads' as SubTab },
+          { label: 'Eventos', value: events.length, sub: 'en Firebase', icon: <Calendar className="w-3.5 h-3.5" />, tab: 'events' as SubTab },
+          { label: 'Borradores', value: draftList.length, sub: 'auto-detect', icon: <Search className="w-3.5 h-3.5" />, tab: 'drafts' as SubTab },
+          { label: 'Reportes', value: reportList.length, sub: 'semanales', icon: <FileText className="w-3.5 h-3.5" />, tab: 'reports' as SubTab },
         ].map((kpi) => (
-          <div key={kpi.label} className="p-2.5 rounded-lg bg-zinc-850/40 border border-zinc-800/50">
+          <button
+            key={kpi.label}
+            onClick={() => setAuditTab(auditTab === kpi.tab ? null : kpi.tab)}
+            className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer w-full ${
+              auditTab === kpi.tab
+                ? 'bg-zinc-800/60 border-amber-500/40 shadow-[0_0_0_1px_rgba(245,158,11,0.2)]'
+                : 'bg-zinc-850/40 border-zinc-800/50 hover:border-zinc-600/40 hover:bg-zinc-800/30'
+            }`}
+          >
             <div className="flex items-center gap-1 text-[10px] text-zinc-500 mb-1">
               {kpi.icon}
               <span>{kpi.label}</span>
             </div>
             <div className="text-xl font-bold text-zinc-200">{kpi.value}</div>
             <div className="text-[9px] text-zinc-600 mt-0.5">{kpi.sub}</div>
-          </div>
+          </button>
         ))}
       </div>
+
+      {/* Estadísticas Outreach (mensajes DM) */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { label: 'Mensajes creados', value: createdDMs, sub: 'DM generados', icon: <Send className="w-3.5 h-3.5" />, tab: 'dm_created' as any },
+          { label: 'DM enviados', value: sentDMs, sub: 'Confirmados hoy', icon: <CheckCircle className="w-3.5 h-3.5" />, tab: 'dm_sent' as any },
+          { label: 'Fallidos', value: failedDMs, sub: 'Error / límite', icon: <AlertCircle className="w-3.5 h-3.5" />, tab: 'dm_failed' as any },
+          { label: 'Leads nuevos', value: newLeadsCount, sub: 'Estado new', icon: <Target className="w-3.5 h-3.5" />, tab: 'leads_new' as any },
+        ].map((kpi) => (
+          <button
+            key={kpi.label}
+            onClick={() => setAuditTab(auditTab === kpi.tab ? null : kpi.tab)}
+            className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer w-full ${
+              auditTab === kpi.tab
+                ? 'bg-zinc-800/60 border-amber-500/40 shadow-[0_0_0_1px_rgba(245,158,11,0.2)]'
+                : 'bg-zinc-850/40 border-zinc-800/50 hover:border-zinc-600/40 hover:bg-zinc-800/30'
+            }`}
+          >
+            <div className="flex items-center gap-1 text-[10px] text-zinc-500 mb-1">
+              {kpi.icon}
+              <span>{kpi.label}</span>
+            </div>
+            <div className="text-xl font-bold text-zinc-200">{kpi.value}</div>
+            <div className="text-[9px] text-zinc-600 mt-0.5">{kpi.sub}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Botón: Enviar los mensajes creados */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] text-zinc-600">Los bots corren automáticamente cada 6h en el servidor. Este botón solo inicia una ejecución manual extra.</span>
+        <button
+          onClick={async () => {
+            console.log('Botón presionado - createdDMs:', createdDMs);
+            if (!window.confirm('¿Ejecutar envío manual adicional? Esto borrará los leads enviados.')) return;
+            try {
+              const endpoint = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8585' : 'https://salebaile.duckdns.org';
+              console.log('Llamando a:', endpoint + '/run?id=outreach_send');
+              const resp = await fetch(`${endpoint}/run?id=outreach_send`, { method: 'POST' });
+              console.log('Respuesta:', resp.status);
+              if (resp.ok) { alert('Envío manual iniciado en el servidor. Continuará aunque cierres la página.'); loadAll(); }
+              else { alert('Error. Código: ' + resp.status); }
+            } catch (e: any) { console.error('Error:', e); alert('No se pudo conectar al servidor. El bot seguirá corriendo por cron.'); }
+          }}
+          className="px-3 py-1.5 rounded-lg bg-amber-600/20 border border-amber-500/30 text-amber-300 text-[11px] font-medium hover:bg-amber-600/40 transition-all cursor-pointer"
+        >
+          Enviar los {createdDMs} mensajes creados
+        </button>
+      </div>
+
+      {/* === PRUEBA MANUAL DM === */}
+      <div className="p-3 rounded-xl bg-zinc-850/30 border border-zinc-700/30 space-y-2">
+        <h4 className="text-[11px] font-bold text-amber-300 uppercase">Enviar DM de prueba</h4>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="@usuario_instagram"
+            value={testHandle}
+            onChange={e => setTestHandle(e.target.value)}
+            className="flex-1 px-2.5 py-1.5 rounded-md bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50"
+          />
+          <input
+            type="text"
+            placeholder="Mensaje (opcional)"
+            value={testMessage}
+            onChange={e => setTestMessage(e.target.value)}
+            className="flex-1 px-2.5 py-1.5 rounded-md bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50"
+          />
+        </div>
+        <button
+          onClick={async () => {
+            if (!testHandle) { alert('Ingresá un @handle de Instagram.'); return; }
+            setTestStatus('Enviando...');
+            try {
+              const endpoint = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8585' : 'https://salebaile.duckdns.org';
+              const resp = await fetch(`${endpoint}/run?id=outreach_send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ handle: testHandle, message: testMessage || `Hola ${testHandle}, te invitamos a publicar en Sale Baile.` })
+              });
+              const result = await resp.text();
+              setTestStatus(resp.ok ? '✅ Enviado: ' + result.slice(0, 60) : '❌ Error: ' + resp.status);
+              alert('Respuesta del servidor: ' + (resp.ok ? 'Enviado' : resp.status));
+            } catch (e: any) {
+              setTestStatus('❌ Error de conexión');
+              console.error('Error:', e);
+              alert('No se pudo conectar al bot de envío. El bot sigue corriendo por cron.');
+            }
+          }}
+          className="w-full py-1.5 rounded-lg bg-amber-600/20 border border-amber-500/30 text-amber-300 text-[11px] font-bold hover:bg-amber-600/40 transition-all cursor-pointer"
+        >
+          Enviar DM de prueba
+        </button>
+        {testStatus && <div className="text-[10px] text-zinc-400 font-medium">{testStatus}</div>}
+      </div>
+
+
+
+      {/* === MODO AUDITORÍA (click en KPI) === */}
+      {auditTab && (
+        <div className="rounded-lg border border-amber-500/30 bg-zinc-900/50 p-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-[12px] font-bold text-amber-300 uppercase tracking-wide">Auditoría: {auditTab}</h4>
+            <button onClick={() => setAuditTab(null)} className="text-[10px] text-zinc-500 hover:text-zinc-300 cursor-pointer">Cerrar</button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {auditTab === 'leads' && leadList.map((l: any) => (
+              <div key={l.key || l.handle} className="p-2 rounded bg-zinc-850/40 border border-zinc-800/30 text-[10px]">
+                <div className="flex justify-between"><span className="font-bold text-zinc-200">{l.handle}</span><span className="text-amber-400">Score {l.score}</span></div>
+                <div className="text-zinc-500 mt-0.5">{l.dance_style || 'baile'} · {l.event_posts_count} eventos · {l.status}</div>
+                {l.outreach_message && <div className="text-zinc-400 mt-1 truncate">DM: {l.outreach_message}</div>}
+              </div>
+            ))}
+            {auditTab === 'events' && events.map((e: any, i: number) => (
+              <div key={e.id || i} className="p-2 rounded bg-zinc-850/40 border border-zinc-800/30 text-[10px]">
+                <div className="font-bold text-zinc-200 truncate">{e.title || 'Sin título'}</div>
+                <div className="text-zinc-500 mt-0.5">{e.status} · {e.genre_family || 'baile'} · {e.venue_name || '-'}</div>
+              </div>
+            ))}
+            {auditTab === 'drafts' && draftList.map((d: any) => (
+              <div key={d.key} className="p-2 rounded bg-zinc-850/40 border border-zinc-800/30 text-[10px]">
+                <div className="font-bold text-zinc-200 truncate">{d.title || 'Sin título'}</div>
+                <div className="text-zinc-500 mt-0.5">{d.status || 'pendiente'} · {d.source_account || '-'}</div>
+              </div>
+            ))}
+            {auditTab === 'reports' && reportList.map((r: any, i: number) => (
+              <div key={r.key || i} className="p-2 rounded bg-zinc-850/40 border border-zinc-800/30 text-[10px]">
+                <div className="font-bold text-zinc-200 truncate">{r.organizer || 'Reporte'}</div>
+                <div className="text-zinc-500 mt-0.5">{r.week_start || ''} → {r.week_end || ''} · {Object.values(r.stats || {}).join(', ')}</div>
+              </div>
+            ))}
+            {auditTab === 'dm_created' && leadList.filter((l: any) => Boolean(l.dm_message || l.generated_dm)).map((l: any) => (
+              <div key={l.key || l.handle} className="p-2 rounded bg-zinc-850/40 border border-zinc-800/30 text-[10px]">
+                <div className="font-bold text-zinc-200">{l.handle}</div>
+                <div className="text-zinc-500 mt-0.5 truncate">DM creado · Score {l.score}</div>
+              </div>
+            ))}
+            {auditTab === 'dm_sent' && leadList.filter((l: any) => l.dm_status === 'sent' || l.status === 'contacted').map((l: any) => (
+              <div key={l.key || l.handle} className="p-2 rounded bg-zinc-850/40 border border-zinc-800/30 text-[10px]">
+                <div className="font-bold text-zinc-200">{l.handle}</div>
+                <div className="text-zinc-500 mt-0.5">DM enviado · {l.status}</div>
+              </div>
+            ))}
+            {auditTab === 'dm_failed' && leadList.filter((l: any) => l.dm_status === 'failed').map((l: any) => (
+              <div key={l.key || l.handle} className="p-2 rounded bg-zinc-850/40 border border-zinc-800/30 text-[10px]">
+                <div className="font-bold text-zinc-200">{l.handle}</div>
+                <div className="text-zinc-500 mt-0.5">DM fallido · {l.dm_status}</div>
+              </div>
+            ))}
+            {auditTab === 'leads_new' && leadList.filter((l: any) => l.status === 'new').map((l: any) => (
+              <div key={l.key || l.handle} className="p-2 rounded bg-zinc-850/40 border border-zinc-800/30 text-[10px]">
+                <div className="font-bold text-zinc-200">{l.handle}</div>
+                <div className="text-zinc-500 mt-0.5">Nuevo · Score {l.score}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Sub-tabs */}
       <div className="flex items-center gap-1.5 border-b border-zinc-800/50 pb-px">

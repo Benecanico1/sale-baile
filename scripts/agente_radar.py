@@ -96,7 +96,7 @@ def scrape_instagram_instagrapi(handle, limit=5):
         from instagrapi import Client
         user = os.environ.get("INSTAGRAM_USERNAME", "salebaile")
         pw = os.environ.get("INSTAGRAM_PASSWORD", "")
-        cl = Client()
+        cl = Client(settings={"headers": INSTAGRAM_HEADERS})
         cl.login(user, pw)
         user_id = cl.user_id_from_username(handle.replace("@", "").strip())
         posts = cl.user_medias(user_id, amount=limit)

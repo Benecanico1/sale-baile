@@ -74,6 +74,7 @@ const MainAppContent: React.FC = () => {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [isMapVenueActive, setIsMapVenueActive] = useState(false);
   const [paymentAlert, setPaymentAlert] = useState<{ title: string; message: string; isSuccess: boolean } | null>(null);
 
   // Detección y aprobación automática al volver de Mercado Pago
@@ -483,6 +484,7 @@ const MainAppContent: React.FC = () => {
             events={events}
             onSelectEvent={setSelectedEvent}
             isMinimized={!!selectedEvent}
+            onActiveVenueChange={setIsMapVenueActive}
           />
         )}
 
@@ -605,10 +607,11 @@ const MainAppContent: React.FC = () => {
         }}
       />
 
-      {/* Botón flotante inteligente con notita musical con ? para Asistente IA (visible en todas las páginas) */}
+      {/* Botón flotante inteligente con notita musical con ? para Asistente IA (visible en todas las páginas, salvo cuando se inspecciona un flyer en el mapa) */}
       <FloatingAIAssistantButton
         onClick={() => setIsAIModalOpen(true)}
         isOpen={isAIModalOpen}
+        hidden={currentTab === 'map' && isMapVenueActive}
       />
 
       <EventDetailModal

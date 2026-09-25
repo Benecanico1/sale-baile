@@ -6,7 +6,9 @@
       "ignore": [
         "firebase.json",
         "**/.*",
-        "**/node_modules/**"
+        "**/node_modules/**",
+        "**/*.bin",
+        "**/*.apk"
       ],
       "headers": [
         {
@@ -36,7 +38,9 @@
       "ignore": [
         "firebase.json",
         "**/.*",
-        "**/node_modules/**"
+        "**/node_modules/**",
+        "**/*.bin",
+        "**/*.apk"
       ],
       "headers": [
         {

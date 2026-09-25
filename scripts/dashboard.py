@@ -41,93 +41,12 @@ if os.path.exists(ENV_FILE):
 # Lista de bots
 BOTS = [
     {
-        "id": "radar",
-        "name": "Radar",
-        "emoji": "📊",
-        "desc": "Scrapear Instagram y publicar eventos",
-        "script": "agente_radar.py",
-        "args": [],
-        "confirm": False,
-    },
-    {
-        "id": "cazador",
-        "name": "Cazador",
+        "id": "cazador_legs",
+        "name": "Cazador de Legs",
         "emoji": "🎯",
-        "desc": "Buscar organizadores nuevos por hashtags",
+        "desc": "Regla: legs de BA + CABA | Solo eventos salsa y bachata",
         "script": "agente_cazador.py",
         "args": [],
-        "confirm": False,
-    },
-    {
-        "id": "outreach",
-        "name": "Outreach (Generar)",
-        "emoji": "📨",
-        "desc": "Generar DMs sin enviar (modo seguro)",
-        "script": "agente_outreach.py",
-        "args": [],
-        "confirm": False,
-    },
-    {
-        "id": "outreach_send",
-        "name": "Outreach (Enviar)",
-        "emoji": "📤",
-        "desc": "Enviar DMs REALES por Instagram",
-        "script": "agente_outreach.py",
-        "args": ["--send", "--limit", "3"],
-        "confirm": True,
-    },
-    {
-        "id": "reportes",
-        "name": "Reportes Semanales",
-        "emoji": "📅",
-        "desc": "Métricas + sugerencias de mejora con IA",
-        "script": "agente_reportes.py",
-        "args": [],
-        "confirm": False,
-    },
-    {
-        "id": "autodeteccion",
-        "name": "Auto-Detección",
-        "emoji": "🔍",
-        "desc": "Detectar flyers nuevos y crear borradores",
-        "script": "agente_autodeteccion.py",
-        "args": [],
-        "confirm": False,
-    },
-    {
-        "id": "contenido",
-        "name": "Contenido",
-        "emoji": "✍️",
-        "desc": "Generar posts de redes sociales",
-        "script": "agente_contenido.py",
-        "args": [],
-        "confirm": False,
-    },
-    {
-        "id": "estratega",
-        "name": "Estratega",
-        "emoji": "📈",
-        "desc": "Analizar mercado y competencia",
-        "script": "agente_estratega.py",
-        "args": [],
-        "confirm": False,
-    },
-    {
-        "id": "investigador",
-        "name": "Investigador",
-        "emoji": "🔬",
-        "desc": "Buscar tecnologías nuevas",
-        "script": "agente_investigador.py",
-        "args": [],
-        "confirm": False,
-    },
-    {
-        "id": "revisor",
-        "name": "Revisor",
-        "emoji": "🐛",
-        "desc": "Revisar código del proyecto",
-        "script": "agente_revisor.py",
-        "args": ["sale-baile"],
         "confirm": False,
     },
 ]
@@ -551,6 +470,48 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif self.path == "/api/sequence/stop":
             _sequence_stop_flag.set()
             resp = json.dumps({"ok": True}).encode("utf-8")
+            self.send_response(200); self._send_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers(); self.wfile.write(resp)
+        elif self.path.startswith("/run?id="):
+            bot_id = self.path.split("id=")[1].split("&")[0]
+            data = json.loads(body) if body and body != "{}" else {}
+            extra_args = []
+            if "handle" in data:
+                extra_args.extend(["--handle", data["handle"]])
+            if "message" in data and data["message"]:
+                extra_args.extend(["--message", data["message"]])
+            bot = next((b for b in BOTS if b["id"] == bot_id), None)
+            if bot_id == "telegram_send":
+                cmd = [sys.executable, "telegram_bot.py", "--message", data.get("message", "")]
+                if data.get("handle"):
+                    cmd.extend(["--user", data.get("handle")])
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=PROJECT_ROOT, env=os.environ, text=True, encoding="utf-8", errors="replace")
+                output_lines = []
+                for line in proc.stdout:
+                    output_lines.append(line.rstrip())
+                    if len(output_lines) > 500:
+                        output_lines.append("... (output truncado)")
+                        break
+                proc.wait(timeout=120)
+                output, error = "\n".join(output_lines), False
+                resp = json.dumps({"output": output, "error": error}).encode("utf-8")
+                self.send_response(200); self._send_cors_headers()
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers(); self.wfile.write(resp); return
+            if bot:
+                bot_copy = dict(bot)
+                bot_copy["args"] = bot.get("args", []) + extra_args
+                if bot_id == "outreach_send" or bot_id == "outreach":
+                    bot_copy["args"] = bot_copy.get("args", []) + ["--send"]
+                for i, b in enumerate(BOTS):
+                    if b["id"] == bot_id:
+                        BOTS[i] = bot_copy
+                        break
+            output, error = run_bot(bot_id) if bot else (f"Bot no encontrado: {bot_id}", True)
+            resp = json.dumps({"output": output, "error": error}).encode("utf-8")
             self.send_response(200); self._send_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(resp)))

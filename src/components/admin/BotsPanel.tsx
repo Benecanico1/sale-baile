@@ -32,16 +32,7 @@ interface BotConfig {
 }
 
 const BOTS: BotConfig[] = [
-  { id: 'radar', name: 'Radar', desc: 'Scrapear Instagram y publicar eventos', icon: <Radar className="w-4 h-4" /> },
-  { id: 'cazador', name: 'Cazador', desc: 'Buscar organizadores nuevos por hashtags', icon: <Target className="w-4 h-4" /> },
-  { id: 'outreach', name: 'Outreach', desc: 'Generar DMs sin enviar (modo seguro)', icon: <PenTool className="w-4 h-4" /> },
-  { id: 'outreach_send', name: 'Envío DM', desc: 'Enviar DMs reales por Instagram', icon: <Send className="w-4 h-4" />, confirm: true },
-  { id: 'reportes', name: 'Reportes', desc: 'Métricas + sugerencias de mejora con IA', icon: <FileText className="w-4 h-4" /> },
-  { id: 'autodeteccion', name: 'Auto-Detect', desc: 'Detectar flyers nuevos y crear borradores', icon: <Search className="w-4 h-4" /> },
-  { id: 'contenido', name: 'Contenido', desc: 'Generar posts de redes sociales', icon: <PenTool className="w-4 h-4" /> },
-  { id: 'estratega', name: 'Estratega', desc: 'Analizar mercado y competencia', icon: <TrendingUp className="w-4 h-4" /> },
-  { id: 'investigador', name: 'Investigador', desc: 'Buscar tecnologías nuevas', icon: <Microscope className="w-4 h-4" /> },
-  { id: 'revisor', name: 'Revisor', desc: 'Revisar código del proyecto', icon: <Bug className="w-4 h-4" /> },
+  { id: 'cazador_legs', name: 'Cazador de Legs', desc: 'Regla: legs de BA + CABA | Solo eventos salsa y bachata', icon: <Target className="w-4 h-4" />, confirm: false },
 ];
 
 const DASHBOARD_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'

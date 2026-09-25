@@ -4,11 +4,13 @@ import { Sparkles, X } from 'lucide-react';
 interface FloatingAIAssistantButtonProps {
   onClick: () => void;
   isOpen?: boolean;
+  hidden?: boolean;
 }
 
 export const FloatingAIAssistantButton: React.FC<FloatingAIAssistantButtonProps> = ({
   onClick,
   isOpen = false,
+  hidden = false,
 }) => {
   const [showTooltip, setShowTooltip] = useState(true);
   const [hasDismissedTooltip, setHasDismissedTooltip] = useState(false);
@@ -22,8 +24,8 @@ export const FloatingAIAssistantButton: React.FC<FloatingAIAssistantButtonProps>
     return () => clearTimeout(timer);
   }, []);
 
-  // Si el modal del Asistente IA ya está abierto, ocultar el botón flotante para evitar solapamientos
-  if (isOpen) return null;
+  // Si el modal del Asistente IA ya está abierto o se solicita ocultar, evitar solapamientos
+  if (isOpen || hidden) return null;
 
   return (
     <div
