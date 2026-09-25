@@ -7,6 +7,13 @@ import { useAuth } from '../../context/AuthContext';
 import { calculateHaversineDistance, formatDistance } from '../../lib/geo';
 import { isThisWeekend, parseISODate, formatEventSchedule } from '../../lib/dateUtils';
 import { preloadImages, getOptimizedImageUrl } from '../../lib/imageOptimizer';
+import { curateHomeEvents } from '../../lib/curation';
+import {
+  recordImpression,
+  recordClick,
+  recordCuration,
+  dumpAnalytics,
+} from '../../lib/homeAnalytics';
 import {
   Search,
   MapPin,
@@ -123,31 +130,47 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
       });
   }, [events, location]);
 
+  // FASE 1 — Curación de la home: saca lo off-topic y ordena por score.
+  const curated = useMemo(() => {
+    const distanceMap = new Map<string, number>();
+    activeEvents.forEach((e) => distanceMap.set(e.id, e.distance_km));
+    return curateHomeEvents(activeEvents, distanceMap);
+  }, [activeEvents]);
+
+  // FASE 0 — Instrumentación: registra curación y vuelca métricas (solo en dev).
+  useEffect(() => {
+    recordCuration(curated.excluded, {
+      ...curated.metrics,
+      totalEvaluated: curated.totalEvaluated,
+    });
+    if (import.meta.env.DEV) dumpAnalytics();
+  }, [curated]);
+
   // Precargar imágenes de flyers para fluidez total
   useEffect(() => {
-    if (activeEvents.length > 0) {
-      preloadImages(activeEvents.slice(0, 15).map((e) => e.flyer_url));
+    if (curated.included.length > 0) {
+      preloadImages(curated.included.slice(0, 15).map((e) => e.flyer_url));
     }
-  }, [activeEvents]);
+  }, [curated.included]);
 
   // Conteo sincronizado de eventos dentro del alcance del Radar (radio seleccionado o 15 km)
   const radarEvents = useMemo(() => {
     const radius = filters.radiusKm || 15;
-    const near = activeEvents.filter((e) => e.distance_km <= radius);
-    return near.length > 0 ? near : activeEvents;
-  }, [activeEvents, filters.radiusKm]);
+    const near = curated.included.filter((e) => e.distance_km <= radius);
+    return near.length > 0 ? near : curated.included;
+  }, [curated.included, filters.radiusKm]);
 
   const radarCount = radarEvents.length;
 
   // Eventos destacados para el carrusel horizontal superior
   const featuredEvents = useMemo(() => {
-    const feat = activeEvents.filter((e) => e.is_featured);
-    return feat.length > 0 ? feat : activeEvents.slice(0, 8);
-  }, [activeEvents]);
+    const feat = curated.included.filter((e) => e.is_featured);
+    return feat.length > 0 ? feat : curated.included.slice(0, 8);
+  }, [curated.included]);
 
   // Eventos filtrados para el feed principal
   const filteredEvents = useMemo(() => {
-    return activeEvents.filter((evt) => {
+    return curated.included.filter((evt) => {
       // Filtro por píldora de ritmo
       if (selectedGenrePill !== 'todos') {
         if (selectedGenrePill === 'salsa-y-bachata') {
@@ -189,7 +212,17 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
 
       return true;
     });
-  }, [activeEvents, selectedGenrePill, activeDateTab, filters.searchQuery]);
+  }, [curated.included, selectedGenrePill, activeDateTab, filters.searchQuery]);
+
+  // FASE 0 — Registra impresiones únicas de las cards visibles en la home.
+  useEffect(() => {
+    [...featuredEvents, ...filteredEvents].forEach((evt) => recordImpression(evt.id));
+  }, [featuredEvents, filteredEvents]);
+
+  const handleSelectEvent = (evt: EventItem) => {
+    recordClick(evt.id);
+    onSelectEvent(evt);
+  };
 
   const handleDateTabClick = (tab: 'todos' | 'hoy' | 'manana' | 'finde' | 'cercano') => {
     setActiveDateTab(tab);
@@ -513,7 +546,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               return (
                 <div
                   key={evt.id}
-                  onClick={() => onSelectEvent(evt)}
+                  onClick={() => handleSelectEvent(evt)}
                   className="w-48 sm:w-auto shrink-0 sm:shrink snap-start bg-oled-900/90 border border-white/10 hover:border-dance-coral/40 rounded-3xl overflow-hidden shadow-glass-card cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between"
                 >
                   {/* Flyer Vertical como en Agenda / Póster */}
@@ -645,7 +678,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                 return (
                   <div
                     key={evt.id}
-                    onClick={() => onSelectEvent(evt)}
+                    onClick={() => handleSelectEvent(evt)}
                     className="group bg-oled-900/90 hover:bg-oled-800/90 border border-white/10 hover:border-dance-coral/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 flex gap-3 sm:gap-4 items-center cursor-pointer transition-all shadow-glass-card active:scale-[0.99] backdrop-blur-sm"
                   >
                     {/* Flyer Thumbnail con precio overlay (diseño de Agenda) */}
