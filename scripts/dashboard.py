@@ -18,6 +18,8 @@ import json
 import subprocess
 import threading
 import urllib.request
+import urllib.error
+import urllib.parse
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -71,6 +73,65 @@ SEQUENCE = [
 SEQUENCE_STATE_FILE = os.path.join(PROJECT_ROOT, "sequence.json")
 _sequence_stop_flag = threading.Event()
 _sequence_thread = None
+OUTREACH_HISTORY_FILE = os.path.join(PROJECT_ROOT, "outreach-history.jsonl")
+_outreach_rate = {}
+ADMIN_EMAILS = {"jesushidalgo25@gmail.com", "bretdesing@gmail.com", "admin@salebaile.com", "admin@hoybailamos.com", "salebaile@gmail.com", "hoybailamos@gmail.com"}
+
+def verify_admin_token(header):
+    """Valida un token de Google en el servidor y comprueba el correo administrador."""
+    token = header.removeprefix("Bearer ").strip() if header else ""
+    if not token:
+        return False
+    for token_type in ("id_token", "access_token"):
+        try:
+            url = "https://oauth2.googleapis.com/tokeninfo?" + urllib.parse.urlencode({token_type: token})
+            with urllib.request.urlopen(url, timeout=8) as response:
+                identity = json.loads(response.read().decode("utf-8"))
+            email = str(identity.get("email", "")).lower().strip()
+            if identity.get("email_verified") in (True, "true") and email in ADMIN_EMAILS:
+                return True
+        except Exception:
+            continue
+    return False
+
+def generate_outreach_draft(handle, goal, client_ip):
+    """Genera un borrador; nunca abre ni envía mensajes de Instagram."""
+    now = datetime.now().timestamp()
+    recent = [value for value in _outreach_rate.get(client_ip, []) if now - value < 3600]
+    if len(recent) >= 20:
+        raise ValueError("Límite de 20 borradores por hora alcanzado. Intentá más tarde.")
+    _outreach_rate[client_ip] = recent + [now]
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+    if not api_key:
+        raise ValueError("DeepSeek no está configurado en la VPS.")
+    handle = str(handle or "").strip().lstrip("@")[:80]
+    goal = str(goal or "").strip()[:700]
+    if not handle:
+        raise ValueError("Falta el usuario de Instagram.")
+    prompt = ("Redactá un único DM breve, natural y listo para pegar en Instagram, en español rioplatense. "
+        "Sale Baile es una plataforma argentina para descubrir eventos de baile y publicar eventos. "
+        "Interpretá el objetivo como una instrucción interna: nunca lo copies literalmente ni escribas frases incompletas. "
+        "Usá saludo, beneficio concreto, llamado a la acción amable y una pregunta final. Usá uno o dos emojis; sin enlaces, hashtags ni promesas. "
+        "No inventes datos, descuentos, funciones ni nombres. No menciones inteligencia artificial. "
+        "Ejemplo: si el objetivo es 'atraerlos a que nos sigan y descarguen nuestra app', escribí una invitación fluida como "
+        "'Nos encantaría que nos sigas y pruebes la app para encontrar eventos cerca tuyo. ¿Te gustaría conocerla?'. "
+        f"Cuenta destinataria: @{handle}. Objetivo interno: {goal}")
+    payload = json.dumps({"model": "deepseek-chat", "messages": [
+        {"role": "system", "content": "Sos community manager de Sale Baile. Respondé solo el texto del DM."},
+        {"role": "user", "content": prompt}], "temperature": 0.7, "max_tokens": 180}).encode("utf-8")
+    request = urllib.request.Request("https://api.deepseek.com/chat/completions", data=payload, method="POST", headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"})
+    try:
+        with urllib.request.urlopen(request, timeout=35) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        raise ValueError(f"DeepSeek respondió {error.code}.")
+    message = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+    if not message:
+        raise ValueError("DeepSeek no devolvió un borrador.")
+    record = {"created_at": datetime.now().isoformat(), "handle": handle, "goal": goal, "message": message, "status": "draft"}
+    with open(OUTREACH_HISTORY_FILE, "a", encoding="utf-8") as history:
+        history.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return message
 
 def load_sequence_state():
     try:
@@ -450,7 +511,25 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         cl = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(cl).decode("utf-8") if cl else "{}"
-        if self.path == "/api/sequence/start":
+        if self.path == "/api/outreach/draft":
+            try:
+                if not verify_admin_token(self.headers.get("Authorization")):
+                    raise PermissionError("Acceso exclusivo para administradores autenticados con Google.")
+                data = json.loads(body) if body else {}
+                message = generate_outreach_draft(data.get("handle"), data.get("goal"), self.client_address[0])
+                resp = json.dumps({"ok": True, "message": message}).encode("utf-8")
+                status = 200
+            except PermissionError as error:
+                resp = json.dumps({"ok": False, "error": str(error)}).encode("utf-8")
+                status = 403
+            except (ValueError, json.JSONDecodeError) as error:
+                resp = json.dumps({"ok": False, "error": str(error)}).encode("utf-8")
+                status = 400
+            self.send_response(status); self._send_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp)))
+            self.end_headers(); self.wfile.write(resp)
+        elif self.path == "/api/sequence/start":
             global _sequence_thread, _sequence_stop_flag
             state = load_sequence_state()
             if state["running"]:

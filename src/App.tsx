@@ -60,9 +60,36 @@ import { OnboardingWelcomeModal } from './components/common/OnboardingWelcomeMod
 import { useAuth } from './context/AuthContext';
 
 const MainAppContent: React.FC = () => {
-  const { user, showPreferencesModal, setShowPreferencesModal } = useAuth();
+  const {
+    user,
+    showPreferencesModal,
+    setShowPreferencesModal,
+    setShowAuthModal,
+    setAuthModalMode,
+  } = useAuth();
   const [currentTab, setCurrentTab] = useState<string>('explore');
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
+
+  // Solicitar registro mediante PopUp después de 30 segundos si el usuario no ha iniciado sesión
+  useEffect(() => {
+    if (user) return;
+
+    const hasPrompted = sessionStorage.getItem('sale_baile_reg_prompt_shown');
+    if (hasPrompted) return;
+
+    const timer = setTimeout(() => {
+      const currentStored = localStorage.getItem('sale_baile_auth_user_v4');
+      if (!currentStored) {
+        setAuthModalMode('register');
+        setShowAuthModal(true);
+        try {
+          sessionStorage.setItem('sale_baile_reg_prompt_shown', 'true');
+        } catch (e) {}
+      }
+    }, 30000); // 30 segundos
+
+    return () => clearTimeout(timer);
+  }, [user, setAuthModalMode, setShowAuthModal]);
   const [events, setEvents] = useState<EventItem[]>(() => getLocalEvents());
   const [reports, setReports] = useState<EventReport[]>(() => getLocalReports());
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
@@ -322,7 +349,9 @@ const MainAppContent: React.FC = () => {
         return {
           ...e,
           ...eventData,
-          status: isDraft ? 'borrador' : 'pendiente',
+          // Preservar el estado del evento al editar: un flyer ya publicado debe
+          // seguir publicado (no volver a "pendiente") cuando el admin guarda cambios.
+          status: isDraft ? 'borrador' : (eventData.status ?? e.status),
           updated_at: now,
         } as EventItem;
       }

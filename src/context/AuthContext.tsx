@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { UserProfile, UserRole } from '../types';
 import { MOCK_ADMIN, isAuthorizedOrganizer } from '../lib/mockData';
 import type { GoogleUserPayload } from '../lib/googleAuth';
+import { signOutUser, onAuthChange, mapFirebaseUserToPayload } from '../lib/firebase';
 
 import {
   fetchCloudOrganizerRequests,
@@ -244,6 +245,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.email) {
+          const norm = parsed.email.toLowerCase().trim();
+          // Purge test/demo accounts
+          if (
+            norm.includes('prueba') ||
+            norm.includes('test') ||
+            norm === 'usuario@hoybailamos.com' ||
+            norm === 'usuario@google.com' ||
+            norm === 's73439054@gmail.com'
+          ) {
+            localStorage.removeItem(STORAGE_AUTH_USER);
+            return null;
+          }
           return parsed;
         }
       }
@@ -537,8 +550,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    signOutUser().catch(() => {});
     setUser(null);
   };
+
+  // Refs para que el listener de Firebase Auth vea valores actualizados (evita cierres obsoletos).
+  const loginWithGooglePayloadRef = useRef(loginWithGooglePayload);
+  useEffect(() => {
+    loginWithGooglePayloadRef.current = loginWithGooglePayload;
+  }, [loginWithGooglePayload]);
+
+  const userRef = useRef<UserProfile | null>(null);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  // Restaurar la sesión de Firebase Auth al recargar la página o abrir otra pestaña.
+  useEffect(() => {
+    const unsub = onAuthChange((fbUser) => {
+      if (fbUser && fbUser.email && !userRef.current) {
+        loginWithGooglePayloadRef.current(mapFirebaseUserToPayload(fbUser));
+      }
+    });
+    return unsub;
+  }, []);
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) return;

@@ -63,6 +63,7 @@ import { AdminEditEventModal } from './AdminEditEventModal';
 import { EventForm } from '../organizer/EventForm';
 import { EditProfileModal } from '../account/EditProfileModal';
 import { BotsPanel } from './BotsPanel';
+import { OutreachCampaignPanel } from './OutreachCampaignPanel';
 
 interface AdminDashboardProps {
   events: EventItem[];
@@ -92,7 +93,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onRefreshAll,
 }) => {
   const { usersList, approveOrganizer, rejectOrganizer, registerOrganizerDirectly, setUserRole, updateUserById, deleteUser, syncFromCloud } = useAuth();
-  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'reports' | 'all' | 'tickets' | 'devices' | 'bots'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'reports' | 'all' | 'tickets' | 'devices' | 'bots' | 'outreach'>('pending');
   const [userFilter, setUserFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [eventFilter, setEventFilter] = useState<'all' | 'featured' | 'standard'>('all');
   const [deviceFilter, setDeviceFilter] = useState<'all' | 'installed' | 'android' | 'ios' | 'desktop'>('all');
@@ -474,6 +475,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           { id: 'all' as const, label: 'Cartelera', icon: <Calendar className="w-3.5 h-3.5" />, count: events.length },
           { id: 'reports' as const, label: 'Denuncias', icon: <Flag className="w-3.5 h-3.5" />, count: activeReports.length > 0 ? activeReports.length : undefined },
           { id: 'bots' as const, label: 'Bots IA', icon: <Bot className="w-3.5 h-3.5" />, count: 10 },
+          { id: 'outreach' as const, label: 'Campañas', icon: <MessageCircle className="w-3.5 h-3.5" />, count: undefined },
         ]).map((tab) => (
           <button
             key={tab.id}
@@ -1433,6 +1435,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {/* Tab: Bots IA — Panel de Control de Agentes */}
       {activeTab === 'bots' && (
         <BotsPanel />
+      )}
+
+      {activeTab === 'outreach' && (
+        <OutreachCampaignPanel />
       )}
 
       {/* Tab: Todos los eventos */}

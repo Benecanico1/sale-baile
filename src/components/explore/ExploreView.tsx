@@ -15,7 +15,6 @@ import {
   ChevronRight,
   ChevronDown,
   Bell,
-  Radio,
   X,
   Music2,
 } from 'lucide-react';
@@ -46,56 +45,48 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
   const [selectedGenrePill, setSelectedGenrePill] = useState<string>('todos');
   const [showAllGenresModal, setShowAllGenresModal] = useState(false);
 
-  // Lista de géneros con estilos según la maqueta Pantalla 1
+  // Lista de géneros con estilos según la identidad de marca
   const genrePills = [
     {
-      id: 'salsa',
-      label: 'Salsa',
-      icon: '💃',
-      bgClass: 'bg-gradient-to-r from-rose-600 to-orange-500 text-white shadow-glow-coral/30',
-      activeBorder: 'ring-2 ring-rose-400',
-    },
-    {
-      id: 'bachata',
-      label: 'Bachata',
-      icon: '🕺',
-      bgClass: 'bg-gradient-to-r from-purple-700 to-indigo-600 text-white shadow-purple-900/40',
-      activeBorder: 'ring-2 ring-purple-400',
+      id: 'salsa-y-bachata',
+      label: 'Salsa y Bachata',
+      icon: '💃🕺',
+      bgClass: 'bg-dance-crimson/10 border border-dance-crimson/25 text-dance-crimson',
+      activeBorder: 'border-dance-crimson ring-2 ring-dance-crimson/50 text-white bg-dance-crimson/15 shadow-glow-crimson/30',
     },
     {
       id: 'rock',
       label: 'Rock',
       icon: '🎸',
-      bgClass: 'bg-gradient-to-r from-blue-700 to-cyan-600 text-white shadow-blue-900/40',
-      activeBorder: 'ring-2 ring-cyan-400',
+      bgClass: 'bg-cyan-500/10 border border-cyan-400/25 text-cyan-300',
+      activeBorder: 'border-cyan-400 ring-2 ring-cyan-400/50 text-white bg-cyan-500/15 shadow-[0_0_15px_rgba(6,182,212,0.25)]',
     },
     {
       id: 'tango',
       label: 'Tango',
       icon: '💃',
-      bgClass: 'bg-gradient-to-r from-amber-700 to-orange-600 text-white shadow-amber-900/40',
-      activeBorder: 'ring-2 ring-amber-400',
+      bgClass: 'bg-amber-500/10 border border-amber-400/25 text-amber-300',
+      activeBorder: 'border-amber-400 ring-2 ring-amber-400/50 text-white bg-amber-500/15 shadow-[0_0_15px_rgba(245,158,11,0.25)]',
     },
     {
       id: 'cumbia',
       label: 'Cumbia',
       icon: '🕺',
-      bgClass: 'bg-gradient-to-r from-emerald-700 to-teal-600 text-white shadow-emerald-900/40',
-      activeBorder: 'ring-2 ring-emerald-400',
+      bgClass: 'bg-emerald-500/10 border border-emerald-400/25 text-emerald-300',
+      activeBorder: 'border-emerald-400 ring-2 ring-emerald-400/50 text-white bg-emerald-500/15 shadow-[0_0_15px_rgba(16,185,129,0.25)]',
     },
     {
       id: 'electronica',
       label: 'Electrónica',
       icon: '🎵',
-      bgClass: 'bg-gradient-to-r from-cyan-700 to-blue-600 text-white shadow-cyan-900/40',
-      activeBorder: 'ring-2 ring-cyan-400',
+      bgClass: 'bg-purple-500/10 border border-purple-400/25 text-purple-300',
+      activeBorder: 'border-purple-400 ring-2 ring-purple-400/50 text-white bg-purple-500/15 shadow-[0_0_15px_rgba(168,85,247,0.25)]',
     },
   ];
 
   // Lista extendida para el modal "Más"
   const allGenresList = [
-    { id: 'salsa', name: 'Salsa', icon: '💃' },
-    { id: 'bachata', name: 'Bachata', icon: '🕺' },
+    { id: 'salsa-y-bachata', name: 'Salsa y Bachata', icon: '💃🕺' },
     { id: 'rock', name: 'Rock', icon: '🎸' },
     { id: 'tango', name: 'Tango', icon: '💃' },
     { id: 'cumbia', name: 'Cumbia', icon: '🕺' },
@@ -159,11 +150,18 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
     return activeEvents.filter((evt) => {
       // Filtro por píldora de ritmo
       if (selectedGenrePill !== 'todos') {
-        const target = selectedGenrePill.toLowerCase();
-        const matchFamily = evt.genre_family?.toLowerCase().includes(target);
-        const matchSub = (evt.subgenres || []).some((s) => s.toLowerCase().includes(target));
-        const matchTitle = evt.title.toLowerCase().includes(target);
-        if (!matchFamily && !matchSub && !matchTitle) return false;
+        if (selectedGenrePill === 'salsa-y-bachata') {
+          const matchFamily = evt.genre_family?.toLowerCase().includes('salsa') || evt.genre_family?.toLowerCase().includes('bachata') || evt.genre_family?.toLowerCase().includes('caribeno');
+          const matchSub = (evt.subgenres || []).some((s) => s.toLowerCase().includes('salsa') || s.toLowerCase().includes('bachata'));
+          const matchTitle = evt.title.toLowerCase().includes('salsa') || evt.title.toLowerCase().includes('bachata');
+          if (!matchFamily && !matchSub && !matchTitle) return false;
+        } else {
+          const target = selectedGenrePill.toLowerCase();
+          const matchFamily = evt.genre_family?.toLowerCase().includes(target);
+          const matchSub = (evt.subgenres || []).some((s) => s.toLowerCase().includes(target));
+          const matchTitle = evt.title.toLowerCase().includes(target);
+          if (!matchFamily && !matchSub && !matchTitle) return false;
+        }
       }
 
       // Filtro por fecha rápida
@@ -207,7 +205,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
       setGenreFamily('all');
     } else {
       setSelectedGenrePill(genreId);
-      if (genreId === 'salsa' || genreId === 'bachata') {
+      if (genreId === 'salsa-y-bachata' || genreId === 'salsa' || genreId === 'bachata') {
         setGenreFamily('salsa-y-bachata');
       } else {
         setGenreFamily(genreId as any);
@@ -218,28 +216,15 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
   return (
     <div className="min-h-screen bg-oled-950 text-white pb-32 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-6 space-y-6 sm:space-y-8">
-        {/* 1. Header Integrado: Logo, Ubicación, Campana y Perfil (Sólo visible en teléfonos móviles) */}
+        {/* 1. Header Integrado: Logo, Campana y Perfil (Sólo visible en teléfonos móviles) */}
         <header className="flex md:hidden items-center justify-between pt-1">
-          {/* Logo y Selector de Ubicación */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <img
-                src="/branding/logo_horizontal.png"
-                alt="Sale Baile"
-                className="h-8 w-auto object-contain"
-              />
-            </div>
-
-            {/* Selector de Ciudad */}
-            <button
-              onClick={onOpenLocationModal}
-              className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white transition-colors cursor-pointer pl-0.5"
-              title="Cambiar ubicación de búsqueda"
-            >
-              <MapPin className="w-3.5 h-3.5 text-dance-coral" />
-              <span className="font-semibold">{location.cityName || 'Buenos Aires'}</span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
-            </button>
+          {/* Logo Oficial */}
+          <div className="flex items-center gap-2">
+            <img
+              src="/branding/logo_horizontal.png"
+              alt="Sale Baile"
+              className="h-8 w-auto object-contain"
+            />
           </div>
 
           {/* Notificaciones y Avatar */}
@@ -276,11 +261,11 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
         {/* 2. Hero + Buscador + Radar Banner en Grid Responsivo */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
           <div className="lg:col-span-7 space-y-4">
-            {/* Título Hero Impactante */}
+            {/* Título Hero Impactante con Degrade de Colores de Marca */}
             <section className="space-y-1">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
                 ¿Dónde <br className="hidden sm:inline" />
-                <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-purple-400 bg-clip-text text-transparent drop-shadow-sm">
+                <span className="bg-gradient-to-r from-dance-coral via-dance-crimson to-dance-amber bg-clip-text text-transparent drop-shadow-[0_2px_14px_rgba(255,45,85,0.35)]">
                   bailamos hoy?
                 </span>
               </h1>
@@ -323,9 +308,9 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               </div>
             </div>
 
-            {/* 4. Selector de Ritmos / Géneros */}
+            {/* 4. Selector de Ritmos / Géneros con fondo gris oscuro y borde activo */}
             <div className="space-y-2 max-w-2xl">
-              {/* Fila 1 */}
+              {/* Fila 1 (3 elementos) */}
               <div className="grid grid-cols-3 gap-2">
                 {genrePills.slice(0, 3).map((pill) => {
                   const isSelected = selectedGenrePill === pill.id;
@@ -333,34 +318,30 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                     <button
                       key={pill.id}
                       onClick={() => handleGenreClick(pill.id)}
-                      className={`py-2 px-3 rounded-2xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
-                        pill.bgClass
-                      } ${
+                      className={`py-2 px-2.5 rounded-2xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer border ${
                         isSelected
-                          ? `${pill.activeBorder} scale-[1.02] shadow-lg`
-                          : 'opacity-90 hover:opacity-100 hover:scale-[1.01]'
+                          ? `${pill.activeBorder} scale-[1.02]`
+                          : 'bg-[#141722]/90 border-white/10 text-slate-300 hover:text-white hover:bg-[#1c2232] hover:border-white/20'
                       }`}
                     >
-                      <span>{pill.label}</span>
+                      <span className="truncate">{pill.label}</span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Fila 2 */}
-              <div className="grid grid-cols-4 gap-2">
-                {genrePills.slice(3, 6).map((pill) => {
+              {/* Fila 2 (Cumbia, Electrónica, Más) */}
+              <div className="grid grid-cols-3 gap-2">
+                {genrePills.slice(3, 5).map((pill) => {
                   const isSelected = selectedGenrePill === pill.id;
                   return (
                     <button
                       key={pill.id}
                       onClick={() => handleGenreClick(pill.id)}
-                      className={`py-2 px-2 rounded-2xl flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer ${
-                        pill.bgClass
-                      } ${
+                      className={`py-2 px-2.5 rounded-2xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer border ${
                         isSelected
-                          ? `${pill.activeBorder} scale-[1.02] shadow-lg`
-                          : 'opacity-90 hover:opacity-100 hover:scale-[1.01]'
+                          ? `${pill.activeBorder} scale-[1.02]`
+                          : 'bg-[#141722]/90 border-white/10 text-slate-300 hover:text-white hover:bg-[#1c2232] hover:border-white/20'
                       }`}
                     >
                       <span className="truncate">{pill.label}</span>
@@ -371,7 +352,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                 {/* Botón Más */}
                 <button
                   onClick={() => setShowAllGenresModal(true)}
-                  className="py-2 px-2 rounded-2xl bg-oled-900 border border-white/10 hover:border-white/20 text-slate-300 hover:text-white flex items-center justify-center text-[11px] font-bold transition-all cursor-pointer"
+                  className="py-2 px-2.5 rounded-2xl bg-[#141722]/90 border border-white/10 hover:border-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-all cursor-pointer hover:bg-[#1c2232]"
                   title="Ver todos los estilos"
                 >
                   <span>••• Más</span>
@@ -380,43 +361,12 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
             </div>
           </div>
 
-          {/* Columna Derecha en PC: Radar de Baile (IA) + Mini Mapa */}
-          <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5">
-            {/* 5. Tarjeta Banner: Radar de Baile (IA) */}
-            <div
-              onClick={() => onNavigateTab?.('map')}
-              className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-950/40 via-rose-950/30 to-oled-900 border border-dance-crimson/50 hover:border-dance-crimson p-4 sm:p-5 shadow-glow-crimson/20 cursor-pointer transition-all hover:scale-[1.01] group h-full flex flex-col justify-center"
-            >
-              <div className="absolute -top-10 -left-10 w-28 h-28 bg-dance-crimson/20 rounded-full blur-2xl pointer-events-none" />
-
-              <div className="flex items-center justify-between gap-3 relative z-10">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-dance-crimson/15 border border-dance-crimson/40 flex items-center justify-center shrink-0 relative">
-                    <div className="absolute inset-0 rounded-2xl border border-dance-crimson/30 animate-ping opacity-30" />
-                    <Radio className="w-5 h-5 sm:w-6 sm:h-6 text-dance-crimson animate-pulse" />
-                  </div>
-
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm sm:text-base font-black text-white">Radar de Baile</span>
-                      <span className="px-1.5 py-0.5 rounded-md bg-dance-crimson text-white text-[9px] font-black tracking-wide uppercase">
-                        IA
-                      </span>
-                    </div>
-                    <p className="text-[11px] sm:text-xs text-slate-300 leading-snug">
-                      <span className="text-dance-coral font-bold">{radarCount} {radarCount === 1 ? 'lugar' : 'lugares'}</span> en radar cerca tuyo (a menos de {filters.radiusKm || 15} km)
-                    </p>
-                  </div>
-                </div>
-
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
-              </div>
-            </div>
-
+          {/* Columna Derecha: Solo el mapa del radar */}
+          <div className="lg:col-span-5 h-full flex flex-col justify-start">
             {/* Mini Preview de Mapa Interactivo con Radar Neón */}
             <div
               onClick={() => onNavigateTab?.('map')}
-              className="relative h-28 sm:h-32 lg:h-32 w-full rounded-3xl overflow-hidden border border-white/15 bg-[#07070a] cursor-pointer group shadow-glass-card"
+              className="relative h-44 sm:h-52 lg:h-[220px] w-full rounded-3xl overflow-hidden border border-white/15 bg-[#07070a] cursor-pointer group shadow-glass-card hover:border-dance-coral/40 transition-all"
             >
               {/* Grilla sutil oscura */}
               <div className="absolute inset-0 bg-[radial-gradient(#1e2230_1px,transparent_1px)] [background-size:16px_16px] opacity-60" />
@@ -456,13 +406,25 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                 );
               })}
 
-              {/* Píldora de estado sincronizada con la misma cantidad de eventos */}
-              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-oled-950/92 border border-white/15 px-3 py-1 rounded-full shadow-2xl backdrop-blur-md z-20">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              {/* Ubicación exclusiva en el mapa del radar */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenLocationModal?.();
+                }}
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-oled-950/95 hover:bg-oled-900 border border-white/15 hover:border-dance-coral/50 px-3.5 py-1.5 rounded-full shadow-2xl backdrop-blur-md z-20 transition-all cursor-pointer group/loc"
+                title="Cambiar ubicación de búsqueda en el mapa"
+              >
+                <MapPin className="w-3.5 h-3.5 text-dance-coral group-hover/loc:scale-110 transition-transform shrink-0" />
                 <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
-                  {location.cityName || 'Buenos Aires'} • {radarCount} {radarCount === 1 ? 'evento en radar' : 'eventos en radar'}
+                  {location.cityName || 'Buenos Aires'}
                 </span>
-              </div>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  • {radarCount} {radarCount === 1 ? 'evento' : 'eventos'}
+                </span>
+                <ChevronDown className="w-3 h-3 text-slate-400 group-hover/loc:text-white shrink-0" />
+              </button>
             </div>
           </div>
         </div>

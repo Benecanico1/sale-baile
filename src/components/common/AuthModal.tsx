@@ -1,107 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { X, Mail, Lock, ArrowRight, MapPin } from 'lucide-react';
-import { GOOGLE_CLIENT_ID, decodeGoogleJwt } from '../../lib/googleAuth';
+import {
+  signInWithEmail,
+  signUpWithEmail,
+  signInWithGoogle,
+  sendResetEmail,
+  mapFirebaseUserToPayload,
+  firebaseErrorMessage,
+} from '../../lib/firebase';
 
 export const AuthModal: React.FC = () => {
-  const { showAuthModal, setShowAuthModal, authModalMode, setAuthModalMode, loginWithEmail, loginWithGooglePayload } = useAuth();
+  const { showAuthModal, setShowAuthModal, authModalMode, setAuthModalMode, loginWithGooglePayload } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [zone, setZone] = useState('');
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!showAuthModal) {
       setAuthError(null);
+      setAuthNotice(null);
       setIsLoadingGoogle(false);
-      return;
+      setIsSubmitting(false);
     }
-
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: (response: { credential: string }) => {
-            if (response.credential) {
-              const payload = decodeGoogleJwt(response.credential);
-              loginWithGooglePayload(payload, zone);
-            }
-          },
-        });
-      } catch (e) {
-        console.warn('Google Identity initialization:', e);
-      }
-    }
-  }, [showAuthModal, zone]);
+  }, [showAuthModal]);
 
   if (!showAuthModal) return null;
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setAuthError(null);
+    setAuthNotice(null);
     setIsLoadingGoogle(true);
-
-    if (window.google?.accounts?.oauth2) {
-      try {
-        const client = window.google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'email profile openid',
-          callback: async (response: any) => {
-            if (response && response.access_token) {
-              try {
-                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${response.access_token}` },
-                });
-                const userData = await res.json();
-                loginWithGooglePayload({
-                  email: userData.email,
-                  name: userData.name,
-                  picture: userData.picture,
-                  sub: userData.sub,
-                  email_verified: userData.email_verified,
-                }, zone);
-              } catch (err) {
-                console.error('Error al obtener perfil de Google:', err);
-                setAuthError('No se pudo obtener el perfil de Google. Intenta de nuevo.');
-                setIsLoadingGoogle(false);
-              }
-            } else {
-              setIsLoadingGoogle(false);
-            }
-          },
-          error_callback: (err: any) => {
-            console.warn('Error en Google OAuth:', err);
-            setIsLoadingGoogle(false);
-            if (err?.type === 'popup_closed') {
-              setAuthError('Ventana de Google cerrada. Vuelve a intentar o ingresa directamente con tu correo.');
-            } else {
-              setAuthError('Google requiere autorizar el dominio o ingresar directamente abajo con tu correo.');
-            }
-          },
-        });
-        client.requestAccessToken();
-      } catch (err) {
-        console.error('Error inicializando token client:', err);
-        setIsLoadingGoogle(false);
-        setAuthError('No se pudo abrir Google. Puedes ingresar directamente con tu correo abajo.');
-      }
-    } else if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.prompt();
-      } catch (e) {
-        setAuthError('Puedes ingresar directamente con tu correo abajo.');
-      }
-      setIsLoadingGoogle(false);
-    } else {
-      setAuthError('El servicio de Google no respondió. Ingresa directamente con tu correo abajo.');
+    try {
+      const cred = await signInWithGoogle();
+      loginWithGooglePayload(mapFirebaseUserToPayload(cred.user), zone);
+    } catch (err) {
+      setAuthError(firebaseErrorMessage(err));
+    } finally {
       setIsLoadingGoogle(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
+    setAuthError(null);
+    setAuthNotice(null);
 
     let cleanEmail = email.trim().toLowerCase();
     // Si el usuario puso sólo su nombre o @nombre sin dominio de correo, colocar @ automáticamente
@@ -111,7 +60,39 @@ export const AuthModal: React.FC = () => {
       cleanEmail = `${cleanEmail.replace(/^@+/, '').replace(/\s+/g, '')}@gmail.com`;
     }
 
-    loginWithEmail(cleanEmail, fullName, zone);
+    if (!password) {
+      setAuthError('Ingresá tu contraseña.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const cred = authModalMode === 'register'
+        ? await signUpWithEmail(cleanEmail, password)
+        : await signInWithEmail(cleanEmail, password);
+      const payload = mapFirebaseUserToPayload(cred.user);
+      if (fullName.trim()) payload.name = fullName.trim();
+      loginWithGooglePayload(payload, zone);
+    } catch (err) {
+      setAuthError(firebaseErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email.trim()) {
+      setAuthError('Escribí tu correo para recuperar la contraseña.');
+      return;
+    }
+    setAuthError(null);
+    setAuthNotice(null);
+    try {
+      await sendResetEmail(email.trim().toLowerCase());
+      setAuthNotice('Te enviamos un correo para restablecer tu contraseña. Revisá tu bandeja.');
+    } catch (err) {
+      setAuthError(firebaseErrorMessage(err));
+    }
   };
 
   return (
@@ -169,6 +150,13 @@ export const AuthModal: React.FC = () => {
           {authError && (
             <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300">
               {authError}
+            </div>
+          )}
+
+          {/* Mensaje informativo (p. ej. correo de recuperación enviado) */}
+          {authNotice && (
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-300">
+              {authNotice}
             </div>
           )}
 
@@ -337,11 +325,24 @@ export const AuthModal: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-gradient-to-r from-dance-crimson via-dance-coral to-dance-amber hover:opacity-95 text-white font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 shadow-glow-crimson transition-all active:scale-[0.99] cursor-pointer"
+              disabled={isSubmitting}
+              className="w-full py-3 px-4 bg-gradient-to-r from-dance-crimson via-dance-coral to-dance-amber hover:opacity-95 text-white font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 shadow-glow-crimson transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
             >
-              <span>{authModalMode === 'register' ? 'Crear Cuenta' : 'Ingresar'}</span>
+              <span>{isSubmitting ? 'Procesando…' : authModalMode === 'register' ? 'Crear Cuenta' : 'Ingresar'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
+
+            {authModalMode === 'login' && (
+              <div className="text-right -mt-2">
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  className="text-[11px] text-slate-400 hover:text-dance-crimson transition-colors cursor-pointer"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            )}
           </form>
 
           {/* Toggle modes */}
